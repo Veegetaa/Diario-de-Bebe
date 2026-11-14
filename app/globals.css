@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Plus+Jakarta+Sans:wght@200;300;400;500;600&display=swap');
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Fraunces', Georgia, serif;
+}
+
+@layer base {
+  :root {
+    --bg-marfim: #FBF7F1;
+    --color-salvia: #DCE9DF;
+    --color-pessego: #F6E3D9;
+    --color-lavanda: #EAE3F2;
+    --color-areia: #F1E9D8;
+    --color-floresta: #24473D;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-weight: 350;
+    letter-spacing: -0.012em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+  }
+}
+
+html, body {
+  min-height: 100%;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure smooth bottom sheet animations and touch ergonomics */
+input[type="range"]::-webkit-slider-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #24473D;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.dark input[type="range"]::-webkit-slider-thumb {
+  background: #EAE3F2;
+}

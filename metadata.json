@@ -1,0 +1,8 @@
+{
+  "name": "Diário do Bebê",
+  "description": "Aplicativo para registrar e acompanhar a rotina do bebê com mamadas no peito e mamadeira, sono em andamento, trocas de fralda, anotações com busca e favoritos, desenhado para uso com uma mão.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "entities": {
+    "Diary": {
+      "title": "Diary",
+      "description": "Shared baby diary instance accessed via family code",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "babyProfile": {
+          "type": "object"
+        },
+        "activeSleep": {
+          "type": "object"
+        },
+        "dayColors": {
+          "type": "object"
+        },
+        "createdAt": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "number"
+        }
+      },
+      "required": ["code"]
+    },
+    "BabyRecord": {
+      "title": "BabyRecord",
+      "description": "Individual routine record within the shared family diary",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "type": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "time": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "hasSpecificTime": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "number"
+        },
+        "side": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "volumeMl": {
+          "type": "number"
+        },
+        "startTime": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "endTime": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "durationMinutes": {
+          "type": "number"
+        },
+        "diaperType": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "isFavorite": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "number"
+        }
+      },
+      "required": ["id", "type", "date", "createdAt"]
+    },
+    "FamilyAccount": {
+      "title": "FamilyAccount",
+      "description": "Family account mapping email and credentials directly to shared diaryId",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "passwordHash": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "diaryId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "number"
+        }
+      },
+      "required": ["email", "passwordHash", "diaryId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/diaries/{diaryCode}": {
+      "schema": "Diary",
+      "description": "Shared baby diary root containing profile and active sleep state"
+    },
+    "/diaries/{diaryCode}/records/{recordId}": {
+      "schema": "BabyRecord",
+      "description": "Individual daily records for this diary"
+    },
+    "/family_accounts/{accountKey}": {
+      "schema": "FamilyAccount",
+      "description": "Direct family authentication credentials"
+    }
+  }
+}
