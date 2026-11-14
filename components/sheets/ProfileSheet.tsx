@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useBaby } from '@/context/BabyContext';
-import { X, Baby, ShieldCheck, Heart, Save, Users } from 'lucide-react';
+import { X, Baby, ShieldCheck, Save, Users } from 'lucide-react';
 import { PWAInstallButton } from '@/components/PWAInstallButton';
 
 export function ProfileSheet() {
@@ -11,7 +11,6 @@ export function ProfileSheet() {
   const [name, setName] = useState(profile.name);
   const [birthDate, setBirthDate] = useState(profile.birthDate);
   const [gender, setGender] = useState(profile.gender);
-  const [notes, setNotes] = useState(profile.notes || '');
 
   if (activeSheet !== 'profile') return null;
 
@@ -20,7 +19,6 @@ export function ProfileSheet() {
       name: name.trim() || 'Bebê',
       birthDate,
       gender,
-      notes: notes.trim(),
     });
     closeSheet();
   };
@@ -92,19 +90,6 @@ export function ProfileSheet() {
               value={birthDate}
               onChange={(e) => setBirthDate(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 dark:bg-[#15152b] border border-stone-200 dark:border-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#24473D]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Observação carinhosa
-            </label>
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ex: Nosso raio de sol, amor da nossa vida…"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 dark:bg-[#15152b] border border-stone-200 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#24473D]"
             />
           </div>
 

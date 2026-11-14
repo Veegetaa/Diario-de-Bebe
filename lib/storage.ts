@@ -16,7 +16,6 @@ export const DEFAULT_PROFILE: BabyProfile = {
   name: 'Maya',
   birthDate: '2026-08-15',
   gender: 'menina',
-  notes: 'Nosso raio de sol.',
 };
 
 /**
