@@ -7,8 +7,10 @@ import {
   DayAlertColor,
   DayColorsMap,
   DiaperRecord,
+  MedicationRecord,
   NoteRecord,
   SleepRecord,
+  VaccineRecord,
 } from './types';
 import {
   format24hTime,
@@ -27,6 +29,8 @@ export interface ReportSectionsSelection {
   fralda: boolean;
   nota: boolean;
   alertas: boolean;
+  remedio: boolean;
+  vacina: boolean;
 }
 
 export const ALL_SECTIONS_SELECTED: ReportSectionsSelection = {
@@ -36,12 +40,14 @@ export const ALL_SECTIONS_SELECTED: ReportSectionsSelection = {
   fralda: true,
   nota: true,
   alertas: true,
+  remedio: true,
+  vacina: true,
 };
 
 export interface DayTimelineEntry {
   id: string;
   time: string;
-  category: 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota';
+  category: 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'remedio' | 'vacina';
   categoryLabel: string;
   summary: string;
   isFavorite?: boolean;
@@ -100,6 +106,14 @@ export interface ReportDataSummary {
     vermelho: number;
     amarelo: number;
     items: Array<{ date: string; color: DayAlertColor }>;
+  };
+  remedio: {
+    total: number;
+    records: MedicationRecord[];
+  };
+  vacina: {
+    total: number;
+    records: VaccineRecord[];
   };
   days: DayReportGroup[];
 }
@@ -191,6 +205,8 @@ export function buildReportSummary(
   const sonoRecords: SleepRecord[] = [];
   const fraldaRecords: DiaperRecord[] = [];
   const notaRecords: NoteRecord[] = [];
+  const remedioRecords: MedicationRecord[] = [];
+  const vacinaRecords: VaccineRecord[] = [];
 
   for (const r of records) {
     if (r.type === 'sono') {
@@ -203,6 +219,8 @@ export function buildReportSummary(
       else if (r.type === 'mamadeira') mamadeiraRecords.push(r);
       else if (r.type === 'fralda') fraldaRecords.push(r);
       else if (r.type === 'nota') notaRecords.push(r);
+      else if (r.type === 'remedio') remedioRecords.push(r);
+      else if (r.type === 'vacina') vacinaRecords.push(r);
     }
   }
 
@@ -364,6 +382,36 @@ export function buildReportSummary(
       }
     }
 
+    if (selectedSections.remedio) {
+      for (const med of remedioRecords) {
+        if (med.date === dateStr) {
+          entries.push({
+            id: med.id,
+            time: med.time || '00:00',
+            category: 'remedio',
+            categoryLabel: 'Remédio',
+            summary: med.notes ? `${med.name} (${med.notes})` : med.name,
+            createdAt: med.createdAt,
+          });
+        }
+      }
+    }
+
+    if (selectedSections.vacina) {
+      for (const vac of vacinaRecords) {
+        if (vac.date === dateStr) {
+          entries.push({
+            id: vac.id,
+            time: vac.time || '00:00',
+            category: 'vacina',
+            categoryLabel: 'Vacina',
+            summary: vac.notes ? `${vac.name} (${vac.notes})` : vac.name,
+            createdAt: vac.createdAt,
+          });
+        }
+      }
+    }
+
     entries.sort((a, b) => a.time.localeCompare(b.time) || a.createdAt - b.createdAt);
 
     const alertColor = selectedSections.alertas ? dayColors[dateStr] : undefined;
@@ -422,6 +470,18 @@ export function buildReportSummary(
       vermelho: vermelhoCount,
       amarelo: amareloCount,
       items: alertItems,
+    },
+    remedio: {
+      total: remedioRecords.length,
+      records: [...remedioRecords].sort(
+        (a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || '')
+      ),
+    },
+    vacina: {
+      total: vacinaRecords.length,
+      records: [...vacinaRecords].sort(
+        (a, b) => a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || '')
+      ),
     },
     days,
   };
@@ -554,6 +614,8 @@ export function createReportPdfDocument({
   if (selectedSections.fralda) includedLabels.push('Fraldas');
   if (selectedSections.nota) includedLabels.push('Anotacoes');
   if (selectedSections.alertas) includedLabels.push('Dias de Alerta');
+  if (selectedSections.remedio) includedLabels.push('Remedios/Vitaminas');
+  if (selectedSections.vacina) includedLabels.push('Vacinas');
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
@@ -684,6 +746,68 @@ export function createReportPdfDocument({
       doc.setTextColor(isRed ? 190 : 146, isRed ? 18 : 64, isRed ? 60 : 14);
       const label = isRed ? 'ALERTA VERMELHO (Dia Perigoso)' : 'ALERTA AMARELO (Dia de Atencao)';
       doc.text(`${formatFullPtDate(item.date)}  -  ${label}`, marginX + 3.5, y + 5);
+      y += 9;
+    }
+    y += 3;
+  }
+
+  // ===================== 3B. REMÉDIOS / VITAMINAS =====================
+  if (selectedSections.remedio && summary.remedio.total > 0) {
+    ensureSpace(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`Remedios e Vitaminas (${summary.remedio.total})`, marginX, y);
+    y += 5;
+
+    for (const med of summary.remedio.records) {
+      ensureSpace(9);
+      doc.setFillColor(236, 254, 255);
+      doc.setDrawColor(6, 182, 212);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(marginX, y, contentWidth, 7.5, 2, 2, 'FD');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(14, 116, 144);
+      const timeStr = med.time ? ` as ${format24hTime(med.time)}` : '';
+      const desc = med.notes ? `${med.name} (${med.notes})` : med.name;
+      doc.text(
+        sanitizePdfText(`${formatShortDate(med.date, true)}${timeStr}  -  ${desc}`),
+        marginX + 3.5,
+        y + 5
+      );
+      y += 9;
+    }
+    y += 3;
+  }
+
+  // ===================== 3C. VACINAS =====================
+  if (selectedSections.vacina && summary.vacina.total > 0) {
+    ensureSpace(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`Vacinas Registradas (${summary.vacina.total})`, marginX, y);
+    y += 5;
+
+    for (const vac of summary.vacina.records) {
+      ensureSpace(9);
+      doc.setFillColor(245, 243, 255);
+      doc.setDrawColor(139, 92, 246);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(marginX, y, contentWidth, 7.5, 2, 2, 'FD');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(109, 40, 217);
+      const timeStr = vac.time ? ` as ${format24hTime(vac.time)}` : '';
+      const desc = vac.notes ? `${vac.name} (${vac.notes})` : vac.name;
+      doc.text(
+        sanitizePdfText(`${formatShortDate(vac.date, true)}${timeStr}  -  ${desc}`),
+        marginX + 3.5,
+        y + 5
+      );
       y += 9;
     }
     y += 3;

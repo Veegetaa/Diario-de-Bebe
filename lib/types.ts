@@ -1,4 +1,4 @@
-export type RecordType = 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota';
+export type RecordType = 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'remedio' | 'vacina';
 
 export interface BabyProfile {
   id: string;
@@ -64,12 +64,45 @@ export interface NoteRecord {
   createdAt: number;
 }
 
+export interface MedicationRecord {
+  id: string;
+  type: 'remedio';
+  date: string; // YYYY-MM-DD
+  hasSpecificTime: boolean;
+  time?: string; // HH:mm
+  name: string; // Nome ou descrição do remédio/vitamina
+  notes?: string;
+  createdAt: number;
+}
+
+export interface VaccineRecord {
+  id: string;
+  type: 'vacina';
+  date: string; // YYYY-MM-DD
+  hasSpecificTime: boolean;
+  time?: string; // HH:mm
+  name: string; // Nome ou descrição da vacina
+  notes?: string;
+  createdAt: number;
+}
+
 export type BabyRecord =
   | BreastfeedingRecord
   | BottleRecord
   | SleepRecord
   | DiaperRecord
-  | NoteRecord;
+  | NoteRecord
+  | MedicationRecord
+  | VaccineRecord;
+
+export interface GrowthRecord {
+  id: string;
+  date: string; // YYYY-MM-DD
+  weightKg: number; // e.g., 6.45
+  heightCm: number; // e.g., 63.5
+  notes?: string;
+  createdAt: number;
+}
 
 export interface ActiveSleepSession {
   id: string;
@@ -85,7 +118,7 @@ export interface UndoAction {
   undo: () => void;
 }
 
-export type TabType = 'hoje' | 'calendario' | 'buscar' | 'relatorios';
+export type TabType = 'hoje' | 'calendario' | 'meu_bebe' | 'buscar' | 'relatorios';
 
 export type DayAlertColor = 'amarelo' | 'vermelho';
 export type DayColorsMap = Record<string, DayAlertColor>;

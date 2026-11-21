@@ -10,6 +10,7 @@ import { DayNoteBox } from '@/components/DayNoteBox';
 import { ForgottenRecordBox } from '@/components/ForgottenRecordBox';
 import { Timeline } from '@/components/Timeline';
 import { CalendarTab } from '@/components/CalendarTab';
+import { MyBabyTab } from '@/components/MyBabyTab';
 import { SearchTab } from '@/components/SearchTab';
 import { ReportsTab } from '@/components/ReportsTab';
 import { BottomNav } from '@/components/BottomNav';
@@ -27,6 +28,7 @@ import { EditRecordSheet } from '@/components/sheets/EditRecordSheet';
 import { ProfileSheet } from '@/components/sheets/ProfileSheet';
 import { AuthSheet } from '@/components/sheets/AuthSheet';
 import { ForgottenRecordSheet } from '@/components/sheets/ForgottenRecordSheet';
+import { CalendarDayRegisterSheet } from '@/components/sheets/CalendarDayRegisterSheet';
 import { PullToRefresh } from '@/components/PullToRefresh';
 
 function MainAppContent() {
@@ -72,6 +74,12 @@ function MainAppContent() {
           </div>
         )}
 
+        {currentTab === 'meu_bebe' && (
+          <div className="animate-in fade-in-50 duration-150">
+            <MyBabyTab />
+          </div>
+        )}
+
         {currentTab === 'buscar' && (
           <div className="animate-in fade-in-50 duration-150">
             <SearchTab />
@@ -102,6 +110,7 @@ function MainAppContent() {
       <ProfileSheet />
       <AuthSheet />
       <ForgottenRecordSheet />
+      <CalendarDayRegisterSheet />
       <RecordDetailModal />
     </div>
   );

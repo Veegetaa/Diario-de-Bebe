@@ -1,13 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useBaby } from '@/context/BabyContext';
 import {
   formatFriendlyDate,
+  formatShortDate,
   formatDuration,
   getTodayDateString,
 } from '@/lib/date-utils';
-import { Moon, Clock, Sparkles } from 'lucide-react';
+import {
+  getLatestGrowthRecord,
+  formatWeightKg,
+  formatHeightCm,
+} from '@/lib/growth-utils';
+import { Moon, Clock, Sparkles, Scale, Ruler, ChevronRight } from 'lucide-react';
 
 export function SummaryCard() {
   const {
@@ -16,10 +22,18 @@ export function SummaryCard() {
     selectedDate,
     recordsForSelectedDate,
     openSheet,
+    growthRecords,
+    setCurrentTab,
   } = useBaby();
 
   const today = getTodayDateString();
   const isToday = selectedDate === today;
+
+  // Always pick the latest measurement by calendar date
+  const latestGrowth = useMemo(
+    () => getLatestGrowthRecord(growthRecords),
+    [growthRecords]
+  );
 
   // Live timer for active sleep
   const [minutesAsleep, setMinutesAsleep] = useState(0);
@@ -91,6 +105,60 @@ export function SummaryCard() {
           {formatDuration(totalSleepMinutesForSelectedDate)}
         </span>
       </div>
+
+      {/* Prominent Baby Weight & Height Highlight (Latest Calendar Date) */}
+      {latestGrowth && (
+        <button
+          type="button"
+          onClick={() => setCurrentTab('meu_bebe')}
+          className="mt-3.5 w-full text-left rounded-2xl bg-stone-50/90 dark:bg-[#131326]/90 border border-stone-200/80 dark:border-slate-700/70 p-3 hover:border-emerald-500/40 transition-all active:scale-[0.99] cursor-pointer group"
+          aria-label="Ver detalhes de peso e altura em Meu bebê"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-slate-400">
+              Medidas atuais · {formatShortDate(latestGrowth.date, true)}
+            </span>
+            <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform">
+              Meu bebê
+              <ChevronRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Weight Highlight with Scale Icon */}
+            <div className="flex items-center gap-2.5 rounded-xl bg-white dark:bg-[#1a1a33] px-3 py-2 border border-emerald-500/20">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Scale className="w-5 h-5 stroke-[2.1]" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[10px] font-semibold text-stone-400 leading-tight">
+                  Peso
+                </span>
+                <span className="block font-serif font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tabular-nums leading-tight mt-0.5">
+                  {formatWeightKg(latestGrowth.weightKg)}{' '}
+                  <span className="text-xs font-sans font-medium text-stone-400">kg</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Height Highlight with Ruler Icon */}
+            <div className="flex items-center gap-2.5 rounded-xl bg-white dark:bg-[#1a1a33] px-3 py-2 border border-sky-500/20">
+              <div className="w-9 h-9 rounded-xl bg-sky-500/15 text-sky-500 dark:text-sky-400 flex items-center justify-center shrink-0">
+                <Ruler className="w-5 h-5 stroke-[2.1]" />
+              </div>
+              <div className="min-w-0">
+                <span className="block text-[10px] font-semibold text-stone-400 leading-tight">
+                  Altura
+                </span>
+                <span className="block font-serif font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 tabular-nums leading-tight mt-0.5">
+                  {formatHeightCm(latestGrowth.heightCm)}{' '}
+                  <span className="text-xs font-sans font-medium text-stone-400">cm</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </button>
+      )}
 
       {/* Empty state guidance if day is completely blank */}
       {!hasAnyRecords && (

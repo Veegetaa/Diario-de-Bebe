@@ -9,6 +9,8 @@ import {
   SleepRecord,
   DiaperRecord,
   NoteRecord,
+  MedicationRecord,
+  VaccineRecord,
 } from '@/lib/types';
 import { SpecificTimeToggle } from './SpecificTimeToggle';
 import {
@@ -73,6 +75,14 @@ function EditRecordForm({ record, onSave, onClose }: EditRecordFormProps) {
   );
   const [isFavorite, setIsFavorite] = useState(() =>
     record.type === 'nota' ? record.isFavorite : false
+  );
+
+  // Remédio / Vacina
+  const [itemName, setItemName] = useState(() =>
+    record.type === 'remedio' || record.type === 'vacina' ? record.name : ''
+  );
+  const [itemNotes, setItemNotes] = useState(() =>
+    record.type === 'remedio' || record.type === 'vacina' ? record.notes || '' : ''
   );
 
   const handleSubmit = () => {
@@ -151,6 +161,34 @@ function EditRecordForm({ record, onSave, onClose }: EditRecordFormProps) {
         time: hasSpecificTime ? time : undefined,
         content: content.trim(),
         isFavorite,
+      };
+      onSave(updated);
+    } else if (record.type === 'remedio') {
+      if (!itemName.trim()) {
+        setTimeError('Descreva o nome do remédio ou vitamina');
+        return;
+      }
+      const updated: MedicationRecord = {
+        ...record,
+        date,
+        hasSpecificTime,
+        time: hasSpecificTime ? time : undefined,
+        name: itemName.trim(),
+        notes: itemNotes.trim() || undefined,
+      };
+      onSave(updated);
+    } else if (record.type === 'vacina') {
+      if (!itemName.trim()) {
+        setTimeError('Descreva o nome da vacina');
+        return;
+      }
+      const updated: VaccineRecord = {
+        ...record,
+        date,
+        hasSpecificTime,
+        time: hasSpecificTime ? time : undefined,
+        name: itemName.trim(),
+        notes: itemNotes.trim() || undefined,
       };
       onSave(updated);
     }
@@ -364,6 +402,39 @@ function EditRecordForm({ record, onSave, onClose }: EditRecordFormProps) {
         </div>
       )}
 
+      {/* Remédio ou Vacina */}
+      {(record.type === 'remedio' || record.type === 'vacina') && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              {record.type === 'remedio' ? 'Qual remédio ou vitamina?' : 'Qual vacina?'}
+            </label>
+            <input
+              type="text"
+              maxLength={140}
+              value={itemName}
+              onChange={(e) => {
+                setItemName(e.target.value);
+                setTimeError(null);
+              }}
+              className="w-full px-3 py-2.5 rounded-xl bg-stone-50 dark:bg-[#15152b] border border-stone-200 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#24473D] min-h-[44px]"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              Observação / dose (opcional)
+            </label>
+            <input
+              type="text"
+              maxLength={200}
+              value={itemNotes}
+              onChange={(e) => setItemNotes(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl bg-stone-50 dark:bg-[#15152b] border border-stone-200 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#24473D] min-h-[44px]"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Common 24h Time & Date controls */}
       {record.type !== 'sono' && (
         <div className="bg-stone-50 dark:bg-[#15152b] rounded-2xl p-3 border border-stone-200/60 dark:border-slate-800/80">
@@ -483,6 +554,8 @@ export function EditRecordSheet() {
                 {editingRecord.type === 'sono' && 'Sessão de sono'}
                 {editingRecord.type === 'fralda' && 'Troca de fralda'}
                 {editingRecord.type === 'nota' && 'Anotação do dia'}
+                {editingRecord.type === 'remedio' && 'Remédio ou vitamina'}
+                {editingRecord.type === 'vacina' && 'Vacina'}
               </p>
             </div>
           </div>

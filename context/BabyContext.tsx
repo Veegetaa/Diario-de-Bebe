@@ -19,6 +19,7 @@ import {
   NoteRecord,
   DayAlertColor,
   DayColorsMap,
+  GrowthRecord,
 } from '@/lib/types';
 import {
   loadProfileFromStorage,
@@ -33,6 +34,8 @@ import {
   saveFamilyCodeToStorage,
   loadDayColorsFromStorage,
   saveDayColorsToStorage,
+  loadGrowthRecordsFromStorage,
+  saveGrowthRecordsToStorage,
 } from '@/lib/storage';
 import {
   getTodayDateString,
@@ -40,6 +43,7 @@ import {
   calculateSleepDuration,
   getSleepMinutesForDate,
 } from '@/lib/date-utils';
+import { sortGrowthRecordsAsc } from '@/lib/growth-utils';
 import {
   generateRandomFamilyCode,
   fetchDiaryByCode,
@@ -50,6 +54,7 @@ import {
   updateProfileInCloud,
   updateActiveSleepInCloud,
   updateDayColorInCloud,
+  updateGrowthRecordsInCloud,
   subscribeToSharedDiary,
   normalizeFamilyCode,
   syncLocalRecordsToCloud,
@@ -90,8 +95,8 @@ interface BabyContextType {
   toggleCalendarDropdown: () => void;
   closeCalendarDropdown: () => void;
   // Sheets & Modals
-  activeSheet: 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'edit' | 'sono_anterior' | 'profile' | 'sync' | 'esquecido' | null;
-  openSheet: (sheet: 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'edit' | 'sono_anterior' | 'profile' | 'sync' | 'esquecido') => void;
+  activeSheet: 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'edit' | 'sono_anterior' | 'profile' | 'sync' | 'esquecido' | 'calendario_registrar' | null;
+  openSheet: (sheet: 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'edit' | 'sono_anterior' | 'profile' | 'sync' | 'esquecido' | 'calendario_registrar') => void;
   closeSheet: () => void;
   editingRecord: BabyRecord | null;
   setEditingRecord: (record: BabyRecord | null) => void;
@@ -99,6 +104,7 @@ interface BabyContextType {
   setViewingRecord: (record: BabyRecord | null) => void;
   // CRUD
   addRecord: (record: BabyRecord, successMessage?: string) => void;
+  addRecordsBatch: (newRecords: BabyRecord[], successMessage?: string) => void;
   updateRecord: (updated: BabyRecord, successMessage?: string) => void;
   deleteRecord: (id: string, successMessage?: string) => void;
   toggleFavoriteNote: (id: string) => void;
@@ -134,6 +140,11 @@ interface BabyContextType {
   // Day Alert Colors (amarelo / vermelho)
   dayColors: DayColorsMap;
   setDayColor: (dateStr: string, color: DayAlertColor | null) => void;
+  // Baby Growth Measurements (peso e altura)
+  growthRecords: GrowthRecord[];
+  addGrowthRecord: (entry: GrowthRecord) => void;
+  updateGrowthRecord: (updated: GrowthRecord) => void;
+  deleteGrowthRecord: (id: string) => void;
 }
 
 const BabyContext = createContext<BabyContextType | undefined>(undefined);
@@ -143,6 +154,9 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   const [records, setRecords] = useState<BabyRecord[]>(() => loadRecordsFromStorage());
   const [activeSleep, setActiveSleep] = useState<ActiveSleepSession | null>(() => loadActiveSleepFromStorage());
   const [dayColors, setDayColors] = useState<DayColorsMap>(() => loadDayColorsFromStorage());
+  const [growthRecords, setGrowthRecords] = useState<GrowthRecord[]>(() =>
+    sortGrowthRecordsAsc(loadGrowthRecordsFromStorage())
+  );
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDateString());
   const [currentTab, setCurrentTab] = useState<TabType>('hoje');
   const [undoAction, setUndoAction] = useState<UndoAction | null>(null);
@@ -152,7 +166,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   
   const [activeSheet, setActiveSheet] = useState<
-    'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'edit' | 'sono_anterior' | 'profile' | 'sync' | 'esquecido' | null
+    'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'edit' | 'sono_anterior' | 'profile' | 'sync' | 'esquecido' | 'calendario_registrar' | null
   >(null);
   const [editingRecord, setEditingRecord] = useState<BabyRecord | null>(null);
   const [viewingRecord, setViewingRecord] = useState<BabyRecord | null>(null);
@@ -199,6 +213,11 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       if (diaryData?.dayColors !== undefined) {
         setDayColors(diaryData.dayColors || {});
         saveDayColorsToStorage(diaryData.dayColors || {});
+      }
+      if (diaryData?.growthRecords !== undefined && Array.isArray(diaryData.growthRecords)) {
+        const sortedGrowth = sortGrowthRecordsAsc(diaryData.growthRecords);
+        setGrowthRecords(sortedGrowth);
+        saveGrowthRecordsToStorage(sortedGrowth);
       }
 
       // Merge cloud records with any local records that might still be unsynced
@@ -260,6 +279,11 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         if (diaryData.dayColors !== undefined) {
           setDayColors(diaryData.dayColors || {});
           saveDayColorsToStorage(diaryData.dayColors || {});
+        }
+        if (diaryData.growthRecords !== undefined && Array.isArray(diaryData.growthRecords)) {
+          const sortedGrowth = sortGrowthRecordsAsc(diaryData.growthRecords);
+          setGrowthRecords(sortedGrowth);
+          saveGrowthRecordsToStorage(sortedGrowth);
         }
       },
       onRecords: (cloudRecords) => {
@@ -441,6 +465,42 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         saveRecordsToStorage(previousRecords);
         if (effectiveSyncId) {
           deleteRecordFromCloud(effectiveSyncId, normalizedRecord.id).catch((e) => console.warn(e));
+        }
+      });
+    },
+    [records, effectiveSyncId, showUndo]
+  );
+
+  const addRecordsBatch = useCallback(
+    (newRecords: BabyRecord[], successMessage = 'Registros salvos') => {
+      if (newRecords.length === 0) return;
+
+      const normalizedBatch: BabyRecord[] = newRecords.map((record) =>
+        record.type === 'sono'
+          ? record
+          : {
+              ...record,
+              hasSpecificTime: true,
+              time: record.time || getCurrentTimeString(),
+            }
+      );
+
+      const previousRecords = [...records];
+      const nextRecords = [...normalizedBatch, ...records];
+      setRecords(nextRecords);
+      saveRecordsToStorage(nextRecords);
+
+      if (effectiveSyncId) {
+        syncLocalRecordsToCloud(effectiveSyncId, normalizedBatch).catch((e) => console.warn(e));
+      }
+
+      showUndo(successMessage, () => {
+        setRecords(previousRecords);
+        saveRecordsToStorage(previousRecords);
+        if (effectiveSyncId) {
+          normalizedBatch.forEach((rec) => {
+            deleteRecordFromCloud(effectiveSyncId, rec.id).catch((e) => console.warn(e));
+          });
         }
       });
     },
@@ -759,6 +819,82 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     [effectiveSyncId]
   );
 
+  // Baby Growth Measurements CRUD (Peso e Altura)
+  const addGrowthRecord = useCallback(
+    (entry: GrowthRecord) => {
+      setGrowthRecords((prev) => {
+        const next = sortGrowthRecordsAsc([...prev, entry]);
+        saveGrowthRecordsToStorage(next);
+        if (effectiveSyncId) {
+          updateGrowthRecordsInCloud(effectiveSyncId, next).catch((e) =>
+            console.warn('Error saving growth record to cloud:', e)
+          );
+        }
+        return next;
+      });
+      showUndo('Medição de peso e altura salva', () => {
+        setGrowthRecords((prev) => {
+          const next = sortGrowthRecordsAsc(prev.filter((item) => item.id !== entry.id));
+          saveGrowthRecordsToStorage(next);
+          if (effectiveSyncId) {
+            updateGrowthRecordsInCloud(effectiveSyncId, next).catch((e) => console.warn(e));
+          }
+          return next;
+        });
+      });
+    },
+    [effectiveSyncId, showUndo]
+  );
+
+  const updateGrowthRecord = useCallback(
+    (updated: GrowthRecord) => {
+      setGrowthRecords((prev) => {
+        const next = sortGrowthRecordsAsc(
+          prev.map((item) => (item.id === updated.id ? updated : item))
+        );
+        saveGrowthRecordsToStorage(next);
+        if (effectiveSyncId) {
+          updateGrowthRecordsInCloud(effectiveSyncId, next).catch((e) =>
+            console.warn('Error updating growth record in cloud:', e)
+          );
+        }
+        return next;
+      });
+    },
+    [effectiveSyncId]
+  );
+
+  const deleteGrowthRecord = useCallback(
+    (id: string) => {
+      let removed: GrowthRecord | undefined;
+      setGrowthRecords((prev) => {
+        removed = prev.find((item) => item.id === id);
+        const next = sortGrowthRecordsAsc(prev.filter((item) => item.id !== id));
+        saveGrowthRecordsToStorage(next);
+        if (effectiveSyncId) {
+          updateGrowthRecordsInCloud(effectiveSyncId, next).catch((e) =>
+            console.warn('Error deleting growth record in cloud:', e)
+          );
+        }
+        return next;
+      });
+      if (removed) {
+        const restored = removed;
+        showUndo('Medição removida', () => {
+          setGrowthRecords((prev) => {
+            const next = sortGrowthRecordsAsc([...prev, restored]);
+            saveGrowthRecordsToStorage(next);
+            if (effectiveSyncId) {
+              updateGrowthRecordsInCloud(effectiveSyncId, next).catch((e) => console.warn(e));
+            }
+            return next;
+          });
+        });
+      }
+    },
+    [effectiveSyncId, showUndo]
+  );
+
   const logout = useCallback(async (): Promise<void> => {
     try {
       await logoutUser();
@@ -832,6 +968,11 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         if (diary.activeSleep !== undefined) {
           setActiveSleep(diary.activeSleep);
           saveActiveSleepToStorage(diary.activeSleep);
+        }
+        if (diary.growthRecords !== undefined && Array.isArray(diary.growthRecords)) {
+          const sortedGrowth = sortGrowthRecordsAsc(diary.growthRecords);
+          setGrowthRecords(sortedGrowth);
+          saveGrowthRecordsToStorage(sortedGrowth);
         }
         setIsCloudConnected(true);
         return { success: true };
@@ -979,7 +1120,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   }, [records, todayDate]);
 
   const openSheet = useCallback(
-    (sheet: 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'edit' | 'sono_anterior' | 'profile' | 'sync' | 'esquecido') => {
+    (sheet: 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'edit' | 'sono_anterior' | 'profile' | 'sync' | 'esquecido' | 'calendario_registrar') => {
       setActiveSheet(sheet);
     },
     []
@@ -1018,6 +1159,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         viewingRecord,
         setViewingRecord,
         addRecord,
+        addRecordsBatch,
         updateRecord,
         deleteRecord,
         toggleFavoriteNote,
@@ -1047,6 +1189,10 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         isManualRefreshing,
         dayColors,
         setDayColor,
+        growthRecords,
+        addGrowthRecord,
+        updateGrowthRecord,
+        deleteGrowthRecord,
       }}
     >
       {children}

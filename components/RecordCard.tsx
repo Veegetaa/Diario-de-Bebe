@@ -7,7 +7,7 @@ import {
   format24hTime,
   formatDuration,
 } from '@/lib/date-utils';
-import { Heart, Milk, Moon, Sparkles, Edit3, Star, ChevronRight } from 'lucide-react';
+import { Heart, Milk, Moon, Sparkles, Edit3, Star, ChevronRight, Pill, Syringe } from 'lucide-react';
 import { CategoryIcon } from '@/components/CategoryIcon';
 
 interface RecordCardProps {
@@ -220,6 +220,74 @@ export function RecordCard({ record }: RecordCardProps) {
               }`}
             />
           </button>
+          <ChevronRight className="w-4 h-4 text-stone-300 dark:text-stone-600 group-hover:text-stone-500 transition-colors" />
+        </div>
+      </div>
+    );
+  }
+
+  if (record.type === 'remedio') {
+    return (
+      <div
+        onClick={handleCardClick}
+        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-[#1a1a33] hover:bg-stone-50/90 dark:hover:bg-[#20203f] border border-stone-300 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] active:scale-[0.99] transition-all cursor-pointer group"
+      >
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-11 h-11 rounded-2xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 flex items-center justify-center shrink-0 shadow-2xs border border-cyan-900/10 dark:border-cyan-500/25 group-hover:scale-105 transition-transform">
+            <Pill className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="min-w-0">
+            <div className="font-serif font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5 min-w-0">
+              <span className="shrink-0">Remédio</span>
+              <span className="text-stone-300 dark:text-stone-600 font-sans font-normal shrink-0">·</span>
+              <span className="font-sans font-semibold text-cyan-700 dark:text-cyan-300 truncate">
+                {record.name}
+              </span>
+            </div>
+            <div className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 truncate">
+              {record.notes || 'Remédio ou vitamina'}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-stone-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 tabular-nums border border-stone-200/50 dark:border-slate-700/60 shadow-2xs">
+            {getRecordTime()}
+          </span>
+          <ChevronRight className="w-4 h-4 text-stone-300 dark:text-stone-600 group-hover:text-stone-500 transition-colors" />
+        </div>
+      </div>
+    );
+  }
+
+  if (record.type === 'vacina') {
+    return (
+      <div
+        onClick={handleCardClick}
+        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-[#1a1a33] hover:bg-stone-50/90 dark:hover:bg-[#20203f] border border-stone-300 dark:border-slate-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] active:scale-[0.99] transition-all cursor-pointer group"
+      >
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-11 h-11 rounded-2xl bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 flex items-center justify-center shrink-0 shadow-2xs border border-violet-900/10 dark:border-violet-500/25 group-hover:scale-105 transition-transform">
+            <Syringe className="w-5 h-5 stroke-[2]" />
+          </div>
+          <div className="min-w-0">
+            <div className="font-serif font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5 min-w-0">
+              <span className="shrink-0">Vacina</span>
+              <span className="text-stone-300 dark:text-stone-600 font-sans font-normal shrink-0">·</span>
+              <span className="font-sans font-semibold text-violet-700 dark:text-violet-300 truncate">
+                {record.name}
+              </span>
+            </div>
+            <div className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 truncate">
+              {record.notes || 'Vacinação registrada'}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-stone-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 tabular-nums border border-stone-200/50 dark:border-slate-700/60 shadow-2xs">
+            {getRecordTime()}
+          </span>
           <ChevronRight className="w-4 h-4 text-stone-300 dark:text-stone-600 group-hover:text-stone-500 transition-colors" />
         </div>
       </div>

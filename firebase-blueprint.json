@@ -23,6 +23,9 @@
         "dayColors": {
           "type": "object"
         },
+        "growthRecords": {
+          "type": "array"
+        },
         "createdAt": {
           "type": "number"
         },
@@ -85,6 +88,14 @@
         "content": {
           "type": "string",
           "maxLength": 1000
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
         },
         "isFavorite": {
           "type": "boolean"

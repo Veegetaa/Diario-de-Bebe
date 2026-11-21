@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { StickyNote, HelpCircle } from 'lucide-react';
+import { StickyNote, HelpCircle, Pill, Syringe } from 'lucide-react';
 
-export type CategoryType = 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | string;
+export type CategoryType = 'peito' | 'mamadeira' | 'sono' | 'fralda' | 'nota' | 'remedio' | 'vacina' | string;
 
 export const CATEGORY_ICONS: Record<string, { src: string; alt: string; cdnUrl: string }> = {
   peito: {
@@ -65,6 +65,14 @@ export function CategoryIcon({
 
   if (normalized === 'nota') {
     return <StickyNote style={{ width: size, height: size }} className={className} />;
+  }
+
+  if (normalized === 'remedio') {
+    return <Pill style={{ width: size, height: size }} className={`text-cyan-400 ${className}`} />;
+  }
+
+  if (normalized === 'vacina') {
+    return <Syringe style={{ width: size, height: size }} className={`text-violet-400 ${className}`} />;
   }
 
   return <HelpCircle style={{ width: size, height: size }} className={className} />;

@@ -21,6 +21,8 @@ import {
   Square,
   Calendar,
   BookOpen,
+  Pill,
+  Syringe,
 } from 'lucide-react';
 
 type SectionKey = keyof ReportSectionsSelection;
@@ -32,6 +34,8 @@ const SECTION_ITEMS: Array<{ key: SectionKey; label: string; description: string
   { key: 'fralda', label: 'Fraldas', description: 'Xixi, cocô e ambos' },
   { key: 'nota', label: 'Anotações', description: 'Observações e favoritas' },
   { key: 'alertas', label: 'Dias de alerta', description: 'Marcações amarelas e vermelhas' },
+  { key: 'remedio', label: 'Remédios', description: 'Remédios e vitaminas' },
+  { key: 'vacina', label: 'Vacinas', description: 'Vacinas aplicadas' },
 ];
 
 export function ReportsTab() {
@@ -85,6 +89,8 @@ export function ReportsTab() {
         fralda: false,
         nota: false,
         alertas: false,
+        remedio: false,
+        vacina: false,
       });
     } else {
       setSelectedSections({ ...ALL_SECTIONS_SELECTED });
@@ -105,6 +111,10 @@ export function ReportsTab() {
         return summary.nota.total;
       case 'alertas':
         return summary.alertas.total;
+      case 'remedio':
+        return summary.remedio.total;
+      case 'vacina':
+        return summary.vacina.total;
     }
   };
 
@@ -530,6 +540,80 @@ export function ReportsTab() {
                 ) : (
                   <p className="text-xs text-stone-500 dark:text-stone-400 mt-1.5">
                     Nenhum dia marcado com cor de alerta neste período.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Medications Preview */}
+            {selectedSections.remedio && (
+              <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1a33] border border-stone-200/70 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Pill className="w-4 h-4 text-cyan-400" />
+                    Remédios e Vitaminas
+                  </span>
+                  <span className="text-xs text-stone-500 dark:text-stone-400 tabular-nums">
+                    {summary.remedio.total}{' '}
+                    {summary.remedio.total === 1 ? 'registro' : 'registros'}
+                  </span>
+                </div>
+                {summary.remedio.records.length > 0 ? (
+                  <div className="mt-2.5 space-y-1.5">
+                    {summary.remedio.records.slice(0, 4).map((m) => (
+                      <div
+                        key={m.id}
+                        className="flex items-center justify-between text-xs py-1 border-t border-stone-100 dark:border-slate-800/80 first:border-t-0"
+                      >
+                        <span className="text-slate-700 dark:text-slate-200 font-medium truncate pr-2">
+                          {m.name}
+                        </span>
+                        <span className="text-[11px] text-stone-400 tabular-nums shrink-0">
+                          {formatShortDate(m.date)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-1.5">
+                    Nenhum remédio ou vitamina registrado neste período.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Vaccines Preview */}
+            {selectedSections.vacina && (
+              <div className="p-4 rounded-2xl bg-white dark:bg-[#1a1a33] border border-stone-200/70 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Syringe className="w-4 h-4 text-violet-400" />
+                    Vacinas
+                  </span>
+                  <span className="text-xs text-stone-500 dark:text-stone-400 tabular-nums">
+                    {summary.vacina.total}{' '}
+                    {summary.vacina.total === 1 ? 'registro' : 'registros'}
+                  </span>
+                </div>
+                {summary.vacina.records.length > 0 ? (
+                  <div className="mt-2.5 space-y-1.5">
+                    {summary.vacina.records.slice(0, 4).map((v) => (
+                      <div
+                        key={v.id}
+                        className="flex items-center justify-between text-xs py-1 border-t border-stone-100 dark:border-slate-800/80 first:border-t-0"
+                      >
+                        <span className="text-slate-700 dark:text-slate-200 font-medium truncate pr-2">
+                          {v.name}
+                        </span>
+                        <span className="text-[11px] text-stone-400 tabular-nums shrink-0">
+                          {formatShortDate(v.date)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-1.5">
+                    Nenhuma vacina registrada neste período.
                   </p>
                 )}
               </div>

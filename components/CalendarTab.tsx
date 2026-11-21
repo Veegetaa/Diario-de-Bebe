@@ -2,16 +2,19 @@
 
 import React, { useState } from 'react';
 import { useBaby } from '@/context/BabyContext';
-import { getTodayDateString, formatFriendlyDate, formatShortDate } from '@/lib/date-utils';
+import { getTodayDateString, formatFriendlyDate, format24hTime } from '@/lib/date-utils';
+import { MedicationRecord, VaccineRecord } from '@/lib/types';
 import { Timeline } from './Timeline';
 import {
   ChevronLeft,
   ChevronRight,
   Star,
   Plus,
-  Calendar as CalendarIcon,
   ShieldAlert,
   AlertTriangle,
+  Pill,
+  Syringe,
+  X,
 } from 'lucide-react';
 
 export function CalendarTab() {
@@ -20,9 +23,9 @@ export function CalendarTab() {
     setSelectedDate,
     records,
     openSheet,
-    recordsForSelectedDate,
     dayColors,
     setDayColor,
+    setViewingRecord,
   } = useBaby();
 
   const today = getTodayDateString();
@@ -63,6 +66,8 @@ export function CalendarTab() {
   // Pre-calculate records markers
   const daysWithRecords = new Set<string>();
   const daysWithFavorites = new Set<string>();
+  const daysWithMedications = new Set<string>();
+  const daysWithVaccines = new Set<string>();
 
   records.forEach((r) => {
     if (r.type === 'sono') {
@@ -75,9 +80,24 @@ export function CalendarTab() {
     if (r.type === 'nota' && r.isFavorite) {
       daysWithFavorites.add(r.date);
     }
+    if (r.type === 'remedio') {
+      daysWithMedications.add(r.date);
+    }
+    if (r.type === 'vacina') {
+      daysWithVaccines.add(r.date);
+    }
   });
 
-  const isSelectedDateEligibleForAdd = selectedDate <= today;
+  // Selected day specific markers
+  const selectedDayAlert = dayColors[selectedDate];
+  const selectedDayMeds = records.filter(
+    (r): r is MedicationRecord => r.type === 'remedio' && r.date === selectedDate
+  );
+  const selectedDayVaccines = records.filter(
+    (r): r is VaccineRecord => r.type === 'vacina' && r.date === selectedDate
+  );
+  const hasSelectedDayMarkers =
+    Boolean(selectedDayAlert) || selectedDayMeds.length > 0 || selectedDayVaccines.length > 0;
 
   return (
     <div className="w-full max-w-xl mx-auto px-4 pt-4 pb-24 space-y-4">
@@ -151,7 +171,7 @@ export function CalendarTab() {
           {/* Days Grid */}
           <div className="grid grid-cols-7 gap-1.5 text-center">
             {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-              <div key={`cal-empty-${i}`} className="h-10" />
+              <div key={`cal-empty-${i}`} className="h-11" />
             ))}
 
             {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -164,66 +184,112 @@ export function CalendarTab() {
               const isTodayDate = dateStr === today;
               const hasRecords = daysWithRecords.has(dateStr);
               const hasFavorite = daysWithFavorites.has(dateStr);
+              const hasMed = daysWithMedications.has(dateStr);
+              const hasVaccine = daysWithVaccines.has(dateStr);
 
               const dayColor = dayColors[dateStr];
               const isRed = dayColor === 'vermelho';
               const isYellow = dayColor === 'amarelo';
 
-              // Determine classes for day circle styling (red or yellow circled as requested)
+              // Determine classes for day circle styling (red or yellow circled)
               let dayClasses = '';
               if (isSelected) {
                 if (isRed) {
-                  dayClasses = 'bg-[#24473D] text-white shadow-xs ring-2 ring-rose-500 ring-offset-2 ring-offset-white dark:ring-offset-[#1a1a33] font-bold';
+                  dayClasses =
+                    'bg-[#24473D] text-white shadow-xs ring-2 ring-rose-500 ring-offset-2 ring-offset-white dark:ring-offset-[#1a1a33] font-bold';
                 } else if (isYellow) {
-                  dayClasses = 'bg-[#24473D] text-white shadow-xs ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-[#1a1a33] font-bold';
+                  dayClasses =
+                    'bg-[#24473D] text-white shadow-xs ring-2 ring-amber-400 ring-offset-2 ring-offset-white dark:ring-offset-[#1a1a33] font-bold';
                 } else {
                   dayClasses = 'bg-[#24473D] text-white shadow-xs';
                 }
               } else if (isRed) {
-                // Circled in red
-                dayClasses = 'border-2 border-rose-500 text-rose-500 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/40 shadow-[0_0_8px_rgba(244,63,94,0.3)] font-bold';
+                dayClasses =
+                  'border-2 border-rose-500 text-rose-500 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/40 shadow-[0_0_8px_rgba(244,63,94,0.3)] font-bold';
               } else if (isYellow) {
-                // Circled in yellow
-                dayClasses = 'border-2 border-amber-400 text-amber-600 dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/40 shadow-[0_0_8px_rgba(251,191,36,0.3)] font-bold';
+                dayClasses =
+                  'border-2 border-amber-400 text-amber-600 dark:text-amber-300 bg-amber-50/60 dark:bg-amber-950/40 shadow-[0_0_8px_rgba(251,191,36,0.3)] font-bold';
               } else if (isTodayDate) {
-                dayClasses = 'border-2 border-[#24473D] dark:border-emerald-400 text-[#24473D] dark:text-emerald-300 bg-stone-100/60 dark:bg-slate-800/60';
+                dayClasses =
+                  'border-2 border-[#24473D] dark:border-emerald-400 text-[#24473D] dark:text-emerald-300 bg-stone-100/60 dark:bg-slate-800/60';
               } else {
-                dayClasses = 'text-slate-700 dark:text-slate-200 hover:bg-stone-100 dark:hover:bg-slate-800/60';
+                dayClasses =
+                  'text-slate-700 dark:text-slate-200 hover:bg-stone-100 dark:hover:bg-slate-800/60';
               }
 
               return (
                 <button
                   key={dateStr}
                   onClick={() => setSelectedDate(dateStr)}
-                  className={`h-10 w-full rounded-2xl flex flex-col items-center justify-center relative transition-all active:scale-95 text-xs font-semibold ${dayClasses}`}
-                  aria-label={`${dayNum} de ${monthNames[viewMonth - 1]}${isRed ? ' - Dia Perigoso / Alerta' : isYellow ? ' - Dia de Atenção' : ''}`}
+                  className={`h-11 w-full rounded-2xl flex flex-col items-center justify-center relative transition-all active:scale-95 text-xs font-semibold ${dayClasses}`}
+                  aria-label={`${dayNum} de ${monthNames[viewMonth - 1]}${
+                    isRed ? ' - Dia Perigoso / Alerta' : isYellow ? ' - Dia de Atenção' : ''
+                  }${hasMed ? ' - Remédio' : ''}${hasVaccine ? ' - Vacina' : ''}`}
                 >
-                  <span>{dayNum}</span>
+                  <span className="leading-none">{dayNum}</span>
 
-                  <div className="flex items-center gap-0.5 h-1.5 -mb-1">
-                    {isRed ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-xs" title="Dia perigoso / alerta" />
-                    ) : isYellow ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-xs" title="Dia de atenção" />
-                    ) : hasFavorite ? (
-                      <Star
-                        className={`w-2 h-2 ${
-                          isSelected
-                            ? 'text-amber-300 fill-amber-300'
-                            : 'text-amber-500 fill-amber-500'
+                  <div className="flex items-center justify-center gap-0.5 h-3 mt-0.5">
+                    {hasMed && (
+                      <Pill
+                        className={`w-2.5 h-2.5 ${
+                          isSelected ? 'text-cyan-200' : 'text-cyan-400'
                         }`}
                       />
-                    ) : hasRecords ? (
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          isSelected ? 'bg-white' : 'bg-[#24473D] dark:bg-emerald-400'
+                    )}
+                    {hasVaccine && (
+                      <Syringe
+                        className={`w-2.5 h-2.5 ${
+                          isSelected ? 'text-violet-200' : 'text-violet-400'
                         }`}
                       />
-                    ) : null}
+                    )}
+                    {!hasMed && !hasVaccine && (
+                      <>
+                        {isRed ? (
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                        ) : isYellow ? (
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        ) : hasFavorite ? (
+                          <Star
+                            className={`w-2 h-2 ${
+                              isSelected
+                                ? 'text-amber-300 fill-amber-300'
+                                : 'text-amber-500 fill-amber-500'
+                            }`}
+                          />
+                        ) : hasRecords ? (
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isSelected ? 'bg-white' : 'bg-[#24473D] dark:bg-emerald-400'
+                            }`}
+                          />
+                        ) : null}
+                      </>
+                    )}
                   </div>
                 </button>
               );
             })}
+          </div>
+
+          {/* Compact Legend */}
+          <div className="mt-3.5 pt-3 border-t border-stone-200/60 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-400">
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full border-2 border-rose-500" />
+              <span>Vermelho</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full border-2 border-amber-400" />
+              <span>Amarelo</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <Pill className="w-3 h-3 text-cyan-400" />
+              <span>Remédio</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <Syringe className="w-3 h-3 text-violet-400" />
+              <span>Vacina</span>
+            </span>
           </div>
         </div>
       )}
@@ -298,100 +364,136 @@ export function CalendarTab() {
         </div>
       )}
 
-      {/* Selected Day Header & Quick Add */}
-      <div className="pt-2">
-        <div className="flex items-center justify-between mb-3 px-1">
-          <div>
+      {/* Selected Day Header & Registrar Button (4 options: Vermelho, Amarelo, Remédio, Vacina) */}
+      <div className="pt-1 space-y-3">
+        <div className="flex items-center justify-between gap-2 px-1">
+          <div className="min-w-0">
             <span className="text-[11px] font-bold uppercase tracking-wider text-stone-400">
               Dia Selecionado
             </span>
-            <h2 className="font-serif font-bold text-lg text-slate-800 dark:text-slate-100">
+            <h2 className="font-serif font-bold text-lg text-slate-800 dark:text-slate-100 truncate">
               {formatFriendlyDate(selectedDate)}
             </h2>
           </div>
 
-          {/* If past or today date, allow adding a record directly */}
-          {isSelectedDateEligibleForAdd && (
-            <button
-              onClick={() => openSheet('peito')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#24473D] text-white text-xs font-semibold active:scale-95 transition-all shadow-xs min-h-[40px]"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>+ Registrar</span>
-            </button>
-          )}
+          <button
+            onClick={() => openSheet('calendario_registrar')}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#24473D] dark:bg-emerald-600 hover:bg-[#1a342c] dark:hover:bg-emerald-500 text-white text-xs font-bold active:scale-95 transition-all shadow-xs min-h-[44px] shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Registrar</span>
+          </button>
         </div>
 
-        {/* Day Color / Danger Alert Selector Card */}
-        <div className="mb-4 p-3.5 rounded-2xl bg-white dark:bg-[#1a1a33] border border-stone-200/70 dark:border-slate-800 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                  <ShieldAlert className="w-4 h-4 text-rose-400" />
-                  Sinalizar dia:
-                </span>
-                {dayColors[selectedDate] === 'vermelho' && (
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40">
-                    🔴 Dia Perigoso / Alerta
-                  </span>
-                )}
-                {dayColors[selectedDate] === 'amarelo' && (
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
-                    🟡 Dia de Atenção
-                  </span>
-                )}
-                {!dayColors[selectedDate] && (
-                  <span className="text-[11px] font-medium text-stone-400">
-                    ⚪ Normal / Sem aviso
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
-                Escolha a cor para destacar no calendário (ex: febre, reação ou observação importante):
-              </p>
-            </div>
+        {/* Active Day Markers Summary (Alert Color, Medications, Vaccines) */}
+        {hasSelectedDayMarkers && (
+          <div className="p-3.5 rounded-2xl bg-white dark:bg-[#1a1a33] border border-stone-200/70 dark:border-slate-800 space-y-2.5 shadow-xs">
+            {/* Alert color row */}
+            {selectedDayAlert && (
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs font-bold">
+                  {selectedDayAlert === 'vermelho' ? (
+                    <>
+                      <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
+                      <span className="text-rose-400">Alerta Vermelho · Dia Perigoso</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0" />
+                      <span className="text-amber-300">Alerta Amarelo · Dia de Atenção</span>
+                    </>
+                  )}
+                </div>
 
-            {/* 3 Color Buttons */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setDayColor(selectedDate, 'vermelho')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 min-h-[38px] ${
-                  dayColors[selectedDate] === 'vermelho'
-                    ? 'bg-rose-500 text-white shadow-md shadow-rose-950/40 ring-2 ring-rose-400'
-                    : 'bg-rose-950/30 hover:bg-rose-900/50 text-rose-300 border border-rose-800/60'
-                }`}
-                title="Marcar dia como Perigoso / Alerta (Vermelho)"
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block" />
-                <span>Vermelho</span>
-              </button>
-
-              <button
-                onClick={() => setDayColor(selectedDate, 'amarelo')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 min-h-[38px] ${
-                  dayColors[selectedDate] === 'amarelo'
-                    ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-950/40 ring-2 ring-amber-300'
-                    : 'bg-amber-950/30 hover:bg-amber-900/50 text-amber-300 border border-amber-800/60'
-                }`}
-                title="Marcar dia como Atenção (Amarelo)"
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
-                <span>Amarelo</span>
-              </button>
-
-              {dayColors[selectedDate] && (
                 <button
+                  type="button"
                   onClick={() => setDayColor(selectedDate, null)}
-                  className="px-2.5 py-1.5 rounded-xl text-xs font-medium text-stone-400 hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-slate-800 border border-stone-200/50 dark:border-slate-800 transition-colors min-h-[38px]"
-                  title="Limpar cor deste dia"
+                  className="p-1.5 rounded-lg text-stone-400 hover:text-slate-200 hover:bg-slate-800 min-h-[34px] min-w-[34px] flex items-center justify-center"
+                  title="Remover cor do dia"
+                  aria-label="Remover sinalização de cor"
                 >
-                  Limpar
+                  <X className="w-3.5 h-3.5" />
                 </button>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* Medications on this day */}
+            {selectedDayMeds.length > 0 && (
+              <div
+                className={`space-y-1.5 ${
+                  selectedDayAlert ? 'pt-2 border-t border-slate-800' : ''
+                }`}
+              >
+                {selectedDayMeds.map((med) => (
+                  <button
+                    key={med.id}
+                    type="button"
+                    onClick={() => setViewingRecord(med)}
+                    className="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-cyan-950/35 hover:bg-cyan-950/55 border border-cyan-500/25 text-left transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Pill className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <div className="min-w-0">
+                        <span className="block text-xs font-bold text-slate-100 truncate">
+                          {med.name}
+                        </span>
+                        {med.notes && (
+                          <span className="block text-[11px] text-stone-400 truncate">
+                            {med.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {med.time && (
+                      <span className="text-[11px] font-semibold text-cyan-300 tabular-nums shrink-0">
+                        {format24hTime(med.time)}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Vaccines on this day */}
+            {selectedDayVaccines.length > 0 && (
+              <div
+                className={`space-y-1.5 ${
+                  selectedDayAlert || selectedDayMeds.length > 0
+                    ? 'pt-2 border-t border-slate-800'
+                    : ''
+                }`}
+              >
+                {selectedDayVaccines.map((vac) => (
+                  <button
+                    key={vac.id}
+                    type="button"
+                    onClick={() => setViewingRecord(vac)}
+                    className="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-violet-950/35 hover:bg-violet-950/55 border border-violet-500/25 text-left transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Syringe className="w-4 h-4 text-violet-400 shrink-0" />
+                      <div className="min-w-0">
+                        <span className="block text-xs font-bold text-slate-100 truncate">
+                          Vacina · {vac.name}
+                        </span>
+                        {vac.notes && (
+                          <span className="block text-[11px] text-stone-400 truncate">
+                            {vac.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {vac.time && (
+                      <span className="text-[11px] font-semibold text-violet-300 tabular-nums shrink-0">
+                        {format24hTime(vac.time)}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Timeline for Selected Date */}
         <Timeline />

@@ -9,13 +9,21 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from './firebase';
-import { BabyProfile, BabyRecord, ActiveSleepSession, DayAlertColor, DayColorsMap } from './types';
+import {
+  BabyProfile,
+  BabyRecord,
+  ActiveSleepSession,
+  DayAlertColor,
+  DayColorsMap,
+  GrowthRecord,
+} from './types';
 
 export interface SharedDiaryData {
   code: string;
   babyProfile?: BabyProfile;
   activeSleep?: ActiveSleepSession | null;
   dayColors?: DayColorsMap;
+  growthRecords?: GrowthRecord[];
   updatedAt?: number;
   createdAt?: number;
 }
@@ -258,6 +266,29 @@ export async function updateDayColorInCloud(
       diaryRef,
       {
         dayColors: nextColors,
+        updatedAt: Date.now(),
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+}
+
+/**
+ * Updates baby growth measurements (peso & altura) in the cloud
+ */
+export async function updateGrowthRecordsInCloud(
+  familyCode: string,
+  growthRecords: GrowthRecord[]
+): Promise<void> {
+  const norm = normalizeFamilyCode(familyCode);
+  const path = `diaries/${norm}`;
+  try {
+    await setDoc(
+      doc(db, 'diaries', norm),
+      {
+        growthRecords,
         updatedAt: Date.now(),
       },
       { merge: true }

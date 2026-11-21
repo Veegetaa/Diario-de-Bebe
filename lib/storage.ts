@@ -1,4 +1,4 @@
-import { BabyProfile, BabyRecord, ActiveSleepSession, DayColorsMap } from './types';
+import { BabyProfile, BabyRecord, ActiveSleepSession, DayColorsMap, GrowthRecord } from './types';
 import { getTodayDateString } from './date-utils';
 
 const STORAGE_KEYS = {
@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   HAS_SEEN_WELCOME: 'diario_do_bebe_has_seen_welcome_v1',
   FAMILY_CODE: 'diario_do_bebe_family_code_v1',
   DAY_COLORS: 'diario_do_bebe_day_colors_v1',
+  GROWTH_RECORDS: 'diario_do_bebe_growth_records_v1',
 };
 
 export const DEFAULT_PROFILE: BabyProfile = {
@@ -164,6 +165,29 @@ export function saveDayColorsToStorage(colors: DayColorsMap): void {
     localStorage.setItem(STORAGE_KEYS.DAY_COLORS, JSON.stringify(colors));
   } catch (e) {
     console.error('Error saving day colors to localStorage', e);
+  }
+}
+
+export function loadGrowthRecordsFromStorage(): GrowthRecord[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.GROWTH_RECORDS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    console.error('Error reading growth records from localStorage', e);
+  }
+  return [];
+}
+
+export function saveGrowthRecordsToStorage(growthRecords: GrowthRecord[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(STORAGE_KEYS.GROWTH_RECORDS, JSON.stringify(growthRecords));
+  } catch (e) {
+    console.error('Error saving growth records to localStorage', e);
   }
 }
 

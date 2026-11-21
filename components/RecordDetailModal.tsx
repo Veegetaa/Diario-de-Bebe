@@ -17,6 +17,8 @@ import {
   Clock,
   Calendar,
   AlertTriangle,
+  Pill,
+  Syringe,
 } from 'lucide-react';
 import { CategoryIcon } from '@/components/CategoryIcon';
 
@@ -280,6 +282,90 @@ export function RecordDetailModal() {
 
               <div className="text-xs text-stone-400 px-1">
                 Horário registrado: {format24hTime(viewingRecord.time) || '12h45'}
+              </div>
+            </div>
+          )}
+
+          {/* Remédio / Vitamina */}
+          {viewingRecord.type === 'remedio' && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-cyan-50 dark:bg-cyan-950/35">
+                <div className="w-12 h-12 rounded-xl bg-cyan-100 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 flex items-center justify-center shrink-0">
+                  <Pill className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-xs font-semibold text-cyan-700 dark:text-cyan-300 uppercase tracking-wider">
+                    Remédio / Vitamina
+                  </span>
+                  <div className="text-lg font-serif font-bold text-slate-800 dark:text-slate-100 break-words">
+                    {viewingRecord.name}
+                  </div>
+                </div>
+              </div>
+
+              {viewingRecord.notes && (
+                <div className="bg-stone-50 dark:bg-[#15152b] rounded-2xl p-3.5 text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
+                  {viewingRecord.notes}
+                </div>
+              )}
+
+              <div className="bg-stone-50 dark:bg-[#15152b] rounded-2xl p-3.5 space-y-2 text-sm">
+                <div className="flex items-center justify-between text-stone-600 dark:text-stone-300">
+                  <span className="flex items-center gap-1.5 text-xs text-stone-400">
+                    <Calendar className="w-3.5 h-3.5" /> Data
+                  </span>
+                  <span className="font-medium">{formatFriendlyDate(viewingRecord.date)}</span>
+                </div>
+                <div className="flex items-center justify-between text-stone-600 dark:text-stone-300 pt-2 border-t border-stone-200/50 dark:border-slate-800">
+                  <span className="flex items-center gap-1.5 text-xs text-stone-400">
+                    <Clock className="w-3.5 h-3.5" /> Horário
+                  </span>
+                  <span className="font-medium tabular-nums">
+                    {format24hTime(viewingRecord.time) || '08h00'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Vacina */}
+          {viewingRecord.type === 'vacina' && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-violet-50 dark:bg-violet-950/35">
+                <div className="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 flex items-center justify-center shrink-0">
+                  <Syringe className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-xs font-semibold text-violet-700 dark:text-violet-300 uppercase tracking-wider">
+                    Vacina
+                  </span>
+                  <div className="text-lg font-serif font-bold text-slate-800 dark:text-slate-100 break-words">
+                    {viewingRecord.name}
+                  </div>
+                </div>
+              </div>
+
+              {viewingRecord.notes && (
+                <div className="bg-stone-50 dark:bg-[#15152b] rounded-2xl p-3.5 text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
+                  {viewingRecord.notes}
+                </div>
+              )}
+
+              <div className="bg-stone-50 dark:bg-[#15152b] rounded-2xl p-3.5 space-y-2 text-sm">
+                <div className="flex items-center justify-between text-stone-600 dark:text-stone-300">
+                  <span className="flex items-center gap-1.5 text-xs text-stone-400">
+                    <Calendar className="w-3.5 h-3.5" /> Data
+                  </span>
+                  <span className="font-medium">{formatFriendlyDate(viewingRecord.date)}</span>
+                </div>
+                <div className="flex items-center justify-between text-stone-600 dark:text-stone-300 pt-2 border-t border-stone-200/50 dark:border-slate-800">
+                  <span className="flex items-center gap-1.5 text-xs text-stone-400">
+                    <Clock className="w-3.5 h-3.5" /> Horário
+                  </span>
+                  <span className="font-medium tabular-nums">
+                    {format24hTime(viewingRecord.time) || '09h00'}
+                  </span>
+                </div>
               </div>
             </div>
           )}
