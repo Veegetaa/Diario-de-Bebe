@@ -157,6 +157,7 @@ export function MyBabyTab() {
   };
 
   const openEditMeasurementForm = (rec: GrowthRecord) => {
+    setConfirmDeleteId(null);
     setEditingId(rec.id);
     setDate(rec.date);
     setWeightKg(rec.weightKg);
@@ -166,6 +167,12 @@ export function MyBabyTab() {
     setNotes(rec.notes || '');
     setFormError(null);
     setShowForm(true);
+  };
+
+  const closeMeasurementForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setFormError(null);
   };
 
   const handleWeightSliderChange = (val: number) => {
@@ -425,35 +432,40 @@ export function MyBabyTab() {
         </section>
       )}
 
-      {/* Register / Edit Measurement Form (Sliders + Direct Input) */}
-      {showForm && (
-        <form
-          onSubmit={handleSaveMeasurement}
-          className="bg-white dark:bg-[#1a1a33] rounded-3xl p-4 sm:p-5 border border-stone-200/70 dark:border-slate-800 space-y-4 shadow-xs"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-serif font-bold text-base text-slate-800 dark:text-slate-100">
-                {editingId ? 'Editar medição' : 'Nova medição de Peso e Altura'}
-              </h2>
-              <p className="text-[11px] text-stone-500 dark:text-stone-400">
-                Ajuste com o controle deslizante ou digite o valor exato
-              </p>
+      {/* Register (inline) OR Edit (instant modal/bottom-sheet overlay) Measurement Form */}
+      {showForm && (() => {
+        const isEditingModal = editingId !== null;
+        const formCard = (
+          <form
+            onSubmit={handleSaveMeasurement}
+            onClick={(e) => e.stopPropagation()}
+            className={`bg-white dark:bg-[#1a1a33] p-4 sm:p-5 border border-stone-200/70 dark:border-slate-700/80 space-y-4 ${
+              isEditingModal
+                ? 'w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto shadow-[0_20px_60px_rgba(0,0,0,0.65)] pb-8 sm:pb-5'
+                : 'rounded-3xl shadow-xs'
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h2 className="font-serif font-bold text-base sm:text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  {isEditingModal && <Edit2 className="w-4 h-4 text-emerald-400 shrink-0" />}
+                  <span>{isEditingModal ? 'Editar medição' : 'Nova medição de Peso e Altura'}</span>
+                </h2>
+                <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                  Ajuste com o controle deslizante ou digite o valor exato
+                </p>
+              </div>
+              {(growthRecords.length > 0 || isEditingModal) && (
+                <button
+                  type="button"
+                  onClick={closeMeasurementForm}
+                  className="p-2 rounded-full text-stone-400 hover:text-slate-200 hover:bg-slate-800 min-h-[40px] min-w-[40px] flex items-center justify-center cursor-pointer"
+                  aria-label="Fechar formulário"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
-            {growthRecords.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  setEditingId(null);
-                }}
-                className="p-2 rounded-full text-stone-400 hover:text-slate-200 hover:bg-slate-800 min-h-[40px] min-w-[40px] flex items-center justify-center"
-                aria-label="Fechar formulário"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
 
           {/* Date Input */}
           <div>
@@ -627,15 +639,43 @@ export function MyBabyTab() {
             <p className="text-xs font-medium text-rose-500 dark:text-rose-400">{formError}</p>
           )}
 
-          <button
-            type="submit"
-            className="w-full py-3.5 px-4 rounded-2xl bg-[#24473D] dark:bg-emerald-600 hover:bg-[#1a342c] dark:hover:bg-emerald-500 text-white font-serif font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-98 min-h-[48px] cursor-pointer"
-          >
-            <Save className="w-4 h-4" />
-            <span>{editingId ? 'Atualizar medição' : 'Salvar medição'}</span>
-          </button>
-        </form>
-      )}
+            <div className={isEditingModal ? 'grid grid-cols-2 gap-2.5 pt-1' : ''}>
+              {isEditingModal && (
+                <button
+                  type="button"
+                  onClick={closeMeasurementForm}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm flex items-center justify-center transition-all active:scale-98 min-h-[48px] cursor-pointer"
+                >
+                  Cancelar
+                </button>
+              )}
+              <button
+                type="submit"
+                className="w-full py-3.5 px-4 rounded-2xl bg-[#24473D] dark:bg-emerald-600 hover:bg-[#1a342c] dark:hover:bg-emerald-500 text-white font-serif font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-98 min-h-[48px] cursor-pointer"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isEditingModal ? 'Salvar alterações' : 'Salvar medição'}</span>
+              </button>
+            </div>
+          </form>
+        );
+
+        if (isEditingModal) {
+          return (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Editar medição"
+              onClick={closeMeasurementForm}
+              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4"
+            >
+              {formCard}
+            </div>
+          );
+        }
+
+        return formCard;
+      })()}
 
       {/* COMPARE PANEL (toggled by "Comparar" button inside Peso e Altura) */}
       {isComparing && (
@@ -1035,8 +1075,9 @@ export function MyBabyTab() {
                       <button
                         type="button"
                         onClick={() => openEditMeasurementForm(rec)}
-                        className="p-2 rounded-xl text-stone-400 hover:text-slate-100 hover:bg-slate-800 min-h-[38px] min-w-[38px] flex items-center justify-center"
+                        className="p-2 rounded-xl text-stone-300 hover:text-emerald-300 hover:bg-emerald-500/10 active:scale-95 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
                         aria-label="Editar medição"
+                        title="Editar medição"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>

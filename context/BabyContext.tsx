@@ -848,7 +848,9 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
 
   const updateGrowthRecord = useCallback(
     (updated: GrowthRecord) => {
+      let previous: GrowthRecord | undefined;
       setGrowthRecords((prev) => {
+        previous = prev.find((item) => item.id === updated.id);
         const next = sortGrowthRecordsAsc(
           prev.map((item) => (item.id === updated.id ? updated : item))
         );
@@ -860,8 +862,23 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         }
         return next;
       });
+      if (previous) {
+        const snapshot = previous;
+        showUndo('Medição atualizada', () => {
+          setGrowthRecords((prev) => {
+            const next = sortGrowthRecordsAsc(
+              prev.map((item) => (item.id === snapshot.id ? snapshot : item))
+            );
+            saveGrowthRecordsToStorage(next);
+            if (effectiveSyncId) {
+              updateGrowthRecordsInCloud(effectiveSyncId, next).catch((e) => console.warn(e));
+            }
+            return next;
+          });
+        });
+      }
     },
-    [effectiveSyncId]
+    [effectiveSyncId, showUndo]
   );
 
   const deleteGrowthRecord = useCallback(
