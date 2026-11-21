@@ -11,6 +11,7 @@ import { ForgottenRecordBox } from '@/components/ForgottenRecordBox';
 import { Timeline } from '@/components/Timeline';
 import { CalendarTab } from '@/components/CalendarTab';
 import { SearchTab } from '@/components/SearchTab';
+import { ReportsTab } from '@/components/ReportsTab';
 import { BottomNav } from '@/components/BottomNav';
 import { UndoToast } from '@/components/UndoToast';
 import { RecordDetailModal } from '@/components/RecordDetailModal';
@@ -74,6 +75,12 @@ function MainAppContent() {
         {currentTab === 'buscar' && (
           <div className="animate-in fade-in-50 duration-150">
             <SearchTab />
+          </div>
+        )}
+
+        {currentTab === 'relatorios' && (
+          <div className="animate-in fade-in-50 duration-150">
+            <ReportsTab />
           </div>
         )}
       </main>

@@ -85,7 +85,7 @@ export interface UndoAction {
   undo: () => void;
 }
 
-export type TabType = 'hoje' | 'calendario' | 'buscar';
+export type TabType = 'hoje' | 'calendario' | 'buscar' | 'relatorios';
 
 export type DayAlertColor = 'amarelo' | 'vermelho';
 export type DayColorsMap = Record<string, DayAlertColor>;
