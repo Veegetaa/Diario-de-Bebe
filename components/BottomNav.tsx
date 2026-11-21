@@ -28,7 +28,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 bg-[#F3ECE2]/95 dark:bg-[#121224]/95 backdrop-blur-xl border-t border-stone-300 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.3)] transition-colors pb-safe"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-[#FFF8FA] dark:bg-[#121224]/95 dark:backdrop-blur-xl border-t border-[#F2C5D5] dark:border-slate-800 shadow-[0_-2px_14px_rgba(84,38,57,0.05)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.3)] transition-colors pb-safe"
       aria-label="Navegação inferior principal"
     >
       <div className="max-w-md mx-auto grid grid-cols-5 items-center h-16 px-1">
@@ -38,10 +38,10 @@ export function BottomNav() {
             <button
               key={id}
               onClick={() => handleTabChange(id)}
-              className={`relative flex flex-col items-center justify-center h-full min-h-[44px] transition-all duration-200 active:scale-95 group ${
+              className={`relative flex flex-col items-center justify-center h-full min-h-[44px] transition-all duration-200 active:scale-95 group cursor-pointer ${
                 isActive
-                  ? 'text-[#24473D] dark:text-emerald-400 font-bold'
-                  : 'text-stone-400 dark:text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'
+                  ? 'text-[#D64D83] dark:text-emerald-400 font-bold'
+                  : 'text-[#886576] dark:text-stone-500 hover:text-[#D64D83] dark:hover:text-stone-300'
               }`}
               aria-current={isActive ? 'page' : undefined}
               aria-label={ariaLabel}
@@ -49,7 +49,7 @@ export function BottomNav() {
               <div
                 className={`w-9 h-7 rounded-xl flex items-center justify-center transition-all ${
                   isActive
-                    ? 'bg-[#DCE9DF]/70 dark:bg-[#24473D]/50 shadow-2xs'
+                    ? 'bg-[#FCE7EF] dark:bg-[#24473D]/50 shadow-2xs'
                     : 'bg-transparent'
                 }`}
               >

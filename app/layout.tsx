@@ -42,7 +42,12 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
             __html: `
               (function() {
                 try {
-                  document.documentElement.classList.add('dark');
+                  var savedTheme = localStorage.getItem('diario_do_bebe_theme_override_v1');
+                  if (savedTheme === 'light') {
+                    document.documentElement.classList.remove('dark');
+                  } else {
+                    document.documentElement.classList.add('dark');
+                  }
                   var _origFetch = window.fetch;
                   Object.defineProperty(window, 'fetch', {
                     configurable: true,
@@ -60,7 +65,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           }}
         />
       </head>
-      <body className="font-sans antialiased text-slate-100 bg-[#121224] transition-colors duration-300 min-h-screen selection:bg-indigo-900" suppressHydrationWarning>
+      <body className="font-sans antialiased text-[#542639] bg-[#FFF8FA] dark:text-slate-100 dark:bg-[#121224] transition-colors duration-300 min-h-screen selection:bg-[#FCE7EF] dark:selection:bg-indigo-900" suppressHydrationWarning>
         {children}
       </body>
     </html>

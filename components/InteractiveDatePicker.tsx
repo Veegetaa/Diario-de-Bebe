@@ -232,13 +232,13 @@ export function InteractiveDatePicker({
 
       {/* Interactive Calendar Panel (Clickable Month, Year, and Day) */}
       {isOpen && (
-        <div className="rounded-2xl bg-[#121226] border border-emerald-500/30 p-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.45)] space-y-3">
+        <div className="rounded-2xl bg-white dark:bg-[#121226] border border-[#F2C5D5] dark:border-emerald-500/30 p-3.5 shadow-[0_12px_32px_rgba(84,38,57,0.12)] dark:shadow-[0_12px_32px_rgba(0,0,0,0.45)] space-y-3">
           {/* Calendar Header: Prev / Clickable Month / Clickable Year / Next */}
           <div className="flex items-center justify-between gap-1.5">
             <button
               type="button"
               onClick={handlePrev}
-              className="w-10 h-10 rounded-xl bg-[#1a1a33] border border-slate-700/70 text-slate-200 hover:border-emerald-500/50 hover:text-emerald-300 flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
+              className="w-10 h-10 rounded-xl bg-[#FCE7EF] dark:bg-[#1a1a33] border border-[#F2C5D5] dark:border-slate-700/70 text-[#542639] dark:text-slate-200 hover:border-[#D64D83] dark:hover:border-emerald-500/50 hover:text-[#D64D83] dark:hover:text-emerald-300 flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
               aria-label="Anterior"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -253,8 +253,8 @@ export function InteractiveDatePicker({
                 }
                 className={`flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] cursor-pointer ${
                   viewMode === 'months'
-                    ? 'bg-emerald-500 text-slate-950'
-                    : 'bg-[#1a1a33] text-slate-100 border border-slate-700/70 hover:border-emerald-500/50'
+                    ? 'bg-[#D64D83] dark:bg-emerald-500 text-white dark:text-slate-950'
+                    : 'bg-[#FCE7EF] dark:bg-[#1a1a33] text-[#542639] dark:text-slate-100 border border-[#F2C5D5] dark:border-slate-700/70 hover:border-[#D64D83] dark:hover:border-emerald-500/50'
                 }`}
               >
                 <span className="truncate">{MONTH_NAMES[viewMonth]}</span>
@@ -274,8 +274,8 @@ export function InteractiveDatePicker({
                 }}
                 className={`flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold tabular-nums transition-all min-h-[40px] cursor-pointer ${
                   viewMode === 'years'
-                    ? 'bg-emerald-500 text-slate-950'
-                    : 'bg-[#1a1a33] text-slate-100 border border-slate-700/70 hover:border-emerald-500/50'
+                    ? 'bg-[#D64D83] dark:bg-emerald-500 text-white dark:text-slate-950'
+                    : 'bg-[#FCE7EF] dark:bg-[#1a1a33] text-[#542639] dark:text-slate-100 border border-[#F2C5D5] dark:border-slate-700/70 hover:border-[#D64D83] dark:hover:border-emerald-500/50'
                 }`}
               >
                 <span>{viewYear}</span>
@@ -286,7 +286,7 @@ export function InteractiveDatePicker({
             <button
               type="button"
               onClick={handleNext}
-              className="w-10 h-10 rounded-xl bg-[#1a1a33] border border-slate-700/70 text-slate-200 hover:border-emerald-500/50 hover:text-emerald-300 flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
+              className="w-10 h-10 rounded-xl bg-[#FCE7EF] dark:bg-[#1a1a33] border border-[#F2C5D5] dark:border-slate-700/70 text-[#542639] dark:text-slate-200 hover:border-[#D64D83] dark:hover:border-emerald-500/50 hover:text-[#D64D83] dark:hover:text-emerald-300 flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0"
               aria-label="Próximo"
             >
               <ChevronRight className="w-4 h-4" />
@@ -300,7 +300,7 @@ export function InteractiveDatePicker({
                 {WEEKDAYS.map((dayName) => (
                   <div
                     key={dayName}
-                    className="text-[11px] font-semibold text-stone-400 py-1"
+                    className="text-[11px] font-semibold text-[#886576] dark:text-stone-400 py-1"
                   >
                     {dayName}
                   </div>
@@ -319,12 +319,12 @@ export function InteractiveDatePicker({
                       onClick={() => handleSelectDay(cell.iso)}
                       className={`h-10 rounded-xl text-xs font-semibold tabular-nums flex items-center justify-center transition-all active:scale-95 cursor-pointer ${
                         isSelected
-                          ? 'bg-emerald-500 text-slate-950 font-bold shadow-[0_0_12px_rgba(16,185,129,0.35)]'
+                          ? 'bg-[#D64D83] dark:bg-emerald-500 text-white dark:text-slate-950 font-bold shadow-[0_0_12px_rgba(214,77,131,0.3)] dark:shadow-[0_0_12px_rgba(16,185,129,0.35)]'
                           : isToday
-                          ? 'border border-emerald-400/70 text-emerald-300 bg-emerald-500/10 font-bold'
+                          ? 'border border-[#D64D83] dark:border-emerald-400/70 text-[#D64D83] dark:text-emerald-300 bg-[#FCE7EF] dark:bg-emerald-500/10 font-bold'
                           : cell.inCurrentMonth
-                          ? 'text-slate-100 hover:bg-[#1f1f3d]'
-                          : 'text-slate-600 hover:bg-[#1a1a33] hover:text-slate-400'
+                          ? 'text-[#542639] dark:text-slate-100 hover:bg-[#FCE7EF] dark:hover:bg-[#1f1f3d]'
+                          : 'text-[#886576]/45 dark:text-slate-600 hover:bg-[#FFF8FA] dark:hover:bg-[#1a1a33] hover:text-[#886576] dark:hover:text-slate-400'
                       }`}
                     >
                       {cell.day}
@@ -347,8 +347,8 @@ export function InteractiveDatePicker({
                     onClick={() => handleSelectMonth(idx)}
                     className={`py-2.5 px-2 rounded-xl text-xs font-bold transition-all min-h-[44px] active:scale-95 cursor-pointer ${
                       isActive
-                        ? 'bg-emerald-500 text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                        : 'bg-[#1a1a33] text-slate-200 border border-slate-800 hover:border-emerald-500/50 hover:text-emerald-300'
+                        ? 'bg-[#D64D83] dark:bg-emerald-500 text-white dark:text-slate-950 shadow-[0_0_12px_rgba(214,77,131,0.28)] dark:shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                        : 'bg-[#FFF8FA] dark:bg-[#1a1a33] text-[#542639] dark:text-slate-200 border border-[#F2C5D5] dark:border-slate-800 hover:border-[#D64D83] dark:hover:border-emerald-500/50 hover:text-[#D64D83] dark:hover:text-emerald-300'
                     }`}
                   >
                     {MONTH_NAMES[idx]}
@@ -370,8 +370,8 @@ export function InteractiveDatePicker({
                     onClick={() => handleSelectYear(yr)}
                     className={`py-2.5 px-2 rounded-xl text-xs font-bold tabular-nums transition-all min-h-[44px] active:scale-95 cursor-pointer ${
                       isActive
-                        ? 'bg-emerald-500 text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                        : 'bg-[#1a1a33] text-slate-200 border border-slate-800 hover:border-emerald-500/50 hover:text-emerald-300'
+                        ? 'bg-[#D64D83] dark:bg-emerald-500 text-white dark:text-slate-950 shadow-[0_0_12px_rgba(214,77,131,0.28)] dark:shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                        : 'bg-[#FFF8FA] dark:bg-[#1a1a33] text-[#542639] dark:text-slate-200 border border-[#F2C5D5] dark:border-slate-800 hover:border-[#D64D83] dark:hover:border-emerald-500/50 hover:text-[#D64D83] dark:hover:text-emerald-300'
                     }`}
                   >
                     {yr}
@@ -382,18 +382,18 @@ export function InteractiveDatePicker({
           )}
 
           {/* Footer shortcuts */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+          <div className="flex items-center justify-between pt-2 border-t border-[#F2C5D5]/70 dark:border-slate-800/80">
             <button
               type="button"
               onClick={handleSelectToday}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 min-h-[36px] cursor-pointer"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#D64D83] dark:text-emerald-400 hover:bg-[#FCE7EF] dark:hover:bg-emerald-500/10 min-h-[36px] cursor-pointer"
             >
               Hoje
             </button>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-stone-400 hover:text-slate-200 hover:bg-slate-800 min-h-[36px] cursor-pointer"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#886576] dark:text-stone-400 hover:text-[#542639] dark:hover:text-slate-200 hover:bg-[#FCE7EF] dark:hover:bg-slate-800 min-h-[36px] cursor-pointer"
             >
               Fechar
             </button>

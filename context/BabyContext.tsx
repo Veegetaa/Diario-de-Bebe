@@ -160,8 +160,10 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDateString());
   const [currentTab, setCurrentTab] = useState<TabType>('hoje');
   const [undoAction, setUndoAction] = useState<UndoAction | null>(null);
-  const [themeMode, setThemeModeState] = useState<'auto' | 'light' | 'dark'>('dark');
-  const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('dark');
+  const [themeMode, setThemeModeState] = useState<'auto' | 'light' | 'dark'>(() =>
+    loadThemeOverrideFromStorage()
+  );
+  const effectiveTheme: 'light' | 'dark' = themeMode === 'light' ? 'light' : 'dark';
   const [isCalendarDropdownOpen, setIsCalendarDropdownOpen] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   
@@ -366,17 +368,19 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     };
   }, [effectiveSyncId, applyCloudData]);
 
-  // App is in dark night mode with starry sky effect
-  const computeEffectiveTheme = useCallback(
-    (): 'light' | 'dark' => {
-      return 'dark';
-    },
-    []
-  );
-
+  // Toggle between dark night starry theme and soft pastel pink light theme
   useEffect(() => {
-    document.documentElement.classList.add('dark');
-  }, []);
+    if (typeof document === 'undefined') return;
+    if (effectiveTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', effectiveTheme === 'dark' ? '#121224' : '#FFF8FA');
+    }
+  }, [effectiveTheme]);
 
   const setThemeMode = useCallback((mode: 'auto' | 'light' | 'dark') => {
     setThemeModeState(mode);

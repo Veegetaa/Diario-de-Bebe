@@ -110,16 +110,16 @@ export function PullToRefresh({ children }: PullToRefreshProps) {
           opacity: effectiveDistance > 10 ? Math.min(1, effectiveDistance / 40) : 0,
         }}
       >
-        <div className="py-2 px-4 rounded-full bg-[#1e1e38]/95 border border-emerald-500/40 text-slate-100 shadow-lg flex items-center gap-2 text-xs font-medium backdrop-blur-md">
+        <div className="py-2 px-4 rounded-full bg-white/95 dark:bg-[#1e1e38]/95 border border-rose-300/80 dark:border-emerald-500/40 text-[#4A2034] dark:text-slate-100 shadow-lg flex items-center gap-2 text-xs font-medium backdrop-blur-md">
           {effectiveState === 'pulling' && (
             <>
               <ArrowDown
-                className="w-4 h-4 text-emerald-400 transition-transform duration-150"
+                className="w-4 h-4 text-rose-500 dark:text-emerald-400 transition-transform duration-150"
                 style={{
                   transform: `rotate(${Math.min(180, (pullDistance / PULL_THRESHOLD) * 180)}deg)`,
                 }}
               />
-              <span className="text-stone-300">Puxe para atualizar</span>
+              <span className="text-[#7A3B58] dark:text-stone-300">Puxe para atualizar</span>
             </>
           )}
 

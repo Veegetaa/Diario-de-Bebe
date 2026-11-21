@@ -35,8 +35,8 @@ function MainAppContent() {
   const { currentTab } = useBaby();
 
   return (
-    <div className="min-h-screen relative flex flex-col bg-[#121224] text-slate-100 transition-colors">
-      {/* Night Sky Starfield & Shooting Stars (Active on Night mode) */}
+    <div className="min-h-screen w-full overflow-x-clip relative flex flex-col bg-[#FFF8FA] dark:bg-[#121224] text-[#542639] dark:text-slate-100 transition-colors duration-300">
+      {/* Night Sky Starfield (dark theme only) */}
       <StarrySky />
 
       {/* Top Header */}

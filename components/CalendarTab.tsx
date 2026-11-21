@@ -429,23 +429,23 @@ export function CalendarTab() {
                     key={med.id}
                     type="button"
                     onClick={() => setViewingRecord(med)}
-                    className="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-cyan-950/35 hover:bg-cyan-950/55 border border-cyan-500/25 text-left transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/35 hover:bg-cyan-100/80 dark:hover:bg-cyan-950/55 border border-cyan-200 dark:border-cyan-500/25 text-left transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <Pill className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <Pill className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
                       <div className="min-w-0">
-                        <span className="block text-xs font-bold text-slate-100 truncate">
+                        <span className="block text-xs font-bold text-[#4A2034] dark:text-slate-100 truncate">
                           {med.name}
                         </span>
                         {med.notes && (
-                          <span className="block text-[11px] text-stone-400 truncate">
+                          <span className="block text-[11px] text-[#8C5A70] dark:text-stone-400 truncate">
                             {med.notes}
                           </span>
                         )}
                       </div>
                     </div>
                     {med.time && (
-                      <span className="text-[11px] font-semibold text-cyan-300 tabular-nums shrink-0">
+                      <span className="text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 tabular-nums shrink-0">
                         {format24hTime(med.time)}
                       </span>
                     )}
@@ -459,7 +459,7 @@ export function CalendarTab() {
               <div
                 className={`space-y-1.5 ${
                   selectedDayAlert || selectedDayMeds.length > 0
-                    ? 'pt-2 border-t border-slate-800'
+                    ? 'pt-2 border-t border-rose-100 dark:border-slate-800'
                     : ''
                 }`}
               >
@@ -468,23 +468,23 @@ export function CalendarTab() {
                     key={vac.id}
                     type="button"
                     onClick={() => setViewingRecord(vac)}
-                    className="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-violet-950/35 hover:bg-violet-950/55 border border-violet-500/25 text-left transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-fuchsia-50 dark:bg-violet-950/35 hover:bg-fuchsia-100/80 dark:hover:bg-violet-950/55 border border-fuchsia-200 dark:border-violet-500/25 text-left transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <Syringe className="w-4 h-4 text-violet-400 shrink-0" />
+                      <Syringe className="w-4 h-4 text-fuchsia-600 dark:text-violet-400 shrink-0" />
                       <div className="min-w-0">
-                        <span className="block text-xs font-bold text-slate-100 truncate">
+                        <span className="block text-xs font-bold text-[#4A2034] dark:text-slate-100 truncate">
                           Vacina · {vac.name}
                         </span>
                         {vac.notes && (
-                          <span className="block text-[11px] text-stone-400 truncate">
+                          <span className="block text-[11px] text-[#8C5A70] dark:text-stone-400 truncate">
                             {vac.notes}
                           </span>
                         )}
                       </div>
                     </div>
                     {vac.time && (
-                      <span className="text-[11px] font-semibold text-violet-300 tabular-nums shrink-0">
+                      <span className="text-[11px] font-semibold text-fuchsia-700 dark:text-violet-300 tabular-nums shrink-0">
                         {format24hTime(vac.time)}
                       </span>
                     )}

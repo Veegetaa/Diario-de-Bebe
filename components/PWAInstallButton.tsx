@@ -36,14 +36,14 @@ export function PWAInstallButton({ variant = 'compact' }: PWAInstallButtonProps)
       {variant === 'compact' ? (
         <button
           onClick={handleClick}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-amber-100/90 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300/70 dark:border-amber-800/60 hover:bg-amber-200/80 active:scale-95 transition-all min-h-[38px] shadow-2xs cursor-pointer"
+          className="flex items-center justify-center sm:gap-1.5 w-8 h-8 sm:w-auto sm:h-9 sm:px-2.5 rounded-full text-xs font-medium bg-amber-100/90 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300/70 dark:border-amber-800/60 hover:bg-amber-200/80 active:scale-95 transition-all shrink-0 shadow-2xs cursor-pointer"
           title="Instalar na tela inicial"
           aria-label="Instalar na tela inicial (PWA)"
         >
           {installSuccess ? (
-            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
           ) : (
-            <Download className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 stroke-[2.2]" />
+            <Download className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 stroke-[2.2] shrink-0" />
           )}
           <span className="hidden sm:inline font-medium">Instalar</span>
         </button>

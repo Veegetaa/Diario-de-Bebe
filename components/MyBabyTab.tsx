@@ -294,19 +294,19 @@ export function MyBabyTab() {
       {/* Header */}
       <div className="flex items-center justify-between gap-2 px-0.5">
         <div>
-          <h1 className="font-serif font-bold text-2xl text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Baby className="w-6 h-6 text-emerald-400 shrink-0" />
+          <h1 className="font-serif font-bold text-2xl text-[#4A2034] dark:text-slate-100 flex items-center gap-2">
+            <Baby className="w-6 h-6 text-rose-500 dark:text-emerald-400 shrink-0" />
             <span>Meu bebê</span>
           </h1>
-          <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+          <p className="text-xs text-[#9A607A] dark:text-stone-400 mt-0.5">
             {profile.name || 'Bebê'} · Acompanhamento de crescimento
           </p>
         </div>
       </div>
 
       {/* Category Pill Header (Peso e Altura) */}
-      <div className="flex items-center justify-between gap-2 bg-white dark:bg-[#1a1a33] rounded-2xl p-2 border border-stone-200/70 dark:border-slate-800">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#24473D] text-white text-xs font-bold">
+      <div className="flex items-center justify-between gap-2 bg-white/95 dark:bg-[#1a1a33] rounded-2xl p-2 border border-rose-200/80 dark:border-slate-800 shadow-2xs">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-500 dark:bg-[#24473D] text-white text-xs font-bold">
           <Scale className="w-4 h-4" />
           <span>Peso e Altura</span>
         </div>
@@ -317,8 +317,8 @@ export function MyBabyTab() {
             onClick={handleToggleCompare}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all min-h-[40px] active:scale-95 cursor-pointer ${
               isComparing
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-stone-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-stone-200 dark:hover:bg-slate-700'
+                ? 'bg-[#D64D83] dark:bg-indigo-600 text-white shadow-xs'
+                : 'bg-[#FCE7EF] dark:bg-slate-800 text-[#542639] dark:text-slate-200 hover:bg-[#F2C5D5]/60 dark:hover:bg-slate-700 border border-[#F2C5D5] dark:border-transparent'
             }`}
             aria-pressed={isComparing}
           >
@@ -335,7 +335,7 @@ export function MyBabyTab() {
                 openNewMeasurementForm();
               }
             }}
-            className="flex items-center gap-1 px-3 py-2 rounded-xl bg-[#24473D] dark:bg-emerald-600 text-white text-xs font-bold transition-all min-h-[40px] active:scale-95 cursor-pointer"
+            className="flex items-center gap-1 px-3 py-2 rounded-xl bg-[#D64D83] hover:bg-[#C23E73] dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs font-bold transition-all min-h-[40px] active:scale-95 cursor-pointer"
           >
             {showForm && !editingId ? (
               <>
@@ -354,45 +354,47 @@ export function MyBabyTab() {
 
       {/* Prominent Current Baby Weight & Height Highlight Card (Latest Calendar Date) */}
       {latestRecord && (
-        <section className="rounded-3xl bg-gradient-to-br from-[#1d1d38] via-[#1a1a33] to-[#15152b] p-4 sm:p-5 border border-emerald-500/25 shadow-[0_6px_24px_rgba(0,0,0,0.22)] space-y-3.5">
-          <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-800/80">
+        <section className="rounded-3xl bg-white dark:bg-gradient-to-br dark:from-[#1d1d38] dark:via-[#1a1a33] dark:to-[#15152b] p-4 sm:p-5 border border-[#F2C5D5] dark:border-emerald-500/25 shadow-[0_4px_18px_rgba(84,38,57,0.05)] dark:shadow-[0_6px_24px_rgba(0,0,0,0.22)] space-y-3.5">
+          <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#F2C5D5]/70 dark:border-slate-800/80">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#D64D83] dark:text-emerald-400 block">
                 Medidas atuais do bebê
               </span>
-              <p className="text-xs text-stone-300 mt-0.5 tabular-nums">
+              <p className="text-xs text-[#886576] dark:text-stone-300 mt-0.5 tabular-nums">
                 Última data registrada:{' '}
-                <strong className="text-slate-100">
+                <strong className="text-[#542639] dark:text-slate-100">
                   {formatReadablePortugueseDate(latestRecord.date) || formatShortDate(latestRecord.date, true)}
                 </strong>
               </p>
             </div>
-            <span className="text-[11px] font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-xl tabular-nums shrink-0">
+            <span className="text-[11px] font-bold text-[#D64D83] dark:text-emerald-300 bg-[#FCE7EF] dark:bg-emerald-500/15 border border-[#F2C5D5] dark:border-emerald-500/30 px-2.5 py-1 rounded-xl tabular-nums shrink-0">
               {formatShortDate(latestRecord.date)}
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             {/* Weight with Prominent Scale (Balança) Icon */}
-            <div className="p-3.5 rounded-2xl bg-[#131326]/90 border border-emerald-500/25 flex flex-col justify-between gap-2">
+            <div className="p-3.5 rounded-2xl bg-[#FFF8FA] dark:bg-[#131326]/90 border border-[#F2C5D5] dark:border-emerald-500/25 flex flex-col justify-between gap-2 shadow-2xs">
               <div className="flex items-center gap-2.5">
-                <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                <div className="w-11 h-11 rounded-2xl bg-[#FCE7EF] dark:bg-emerald-500/15 border border-[#F2C5D5] dark:border-emerald-500/30 text-[#D64D83] dark:text-emerald-400 flex items-center justify-center shrink-0">
                   <Scale className="w-6 h-6 stroke-[2]" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300/90 block">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[#886576] dark:text-emerald-300/90 block">
                     Peso
                   </span>
-                  <div className="font-serif font-bold text-2xl sm:text-[26px] text-slate-50 tabular-nums leading-tight">
+                  <div className="font-serif font-bold text-2xl sm:text-[26px] text-[#542639] dark:text-slate-50 tabular-nums leading-tight">
                     {formatKg(latestRecord.weightKg)}
-                    <span className="text-xs font-sans font-semibold text-stone-400 ml-1">kg</span>
+                    <span className="text-xs font-sans font-semibold text-[#886576] dark:text-stone-400 ml-1">kg</span>
                   </div>
                 </div>
               </div>
               {latestWeightDiff !== null && (
                 <div
-                  className={`text-[11px] font-semibold tabular-nums pt-1 border-t border-slate-800/80 ${
-                    latestWeightDiff >= 0 ? 'text-emerald-300' : 'text-rose-300'
+                  className={`text-[11px] font-semibold tabular-nums pt-1 border-t border-[#F2C5D5]/60 dark:border-slate-800/80 ${
+                    latestWeightDiff >= 0
+                      ? 'text-[#24473D] bg-[#DCEADF] dark:bg-transparent px-2 py-0.5 rounded-lg dark:p-0 dark:text-emerald-300'
+                      : 'text-[#D64D83] dark:text-rose-300'
                   }`}
                 >
                   {latestWeightDiff >= 0 ? '+' : ''}
@@ -402,25 +404,27 @@ export function MyBabyTab() {
             </div>
 
             {/* Height with Prominent Ruler (Tamanho) Icon */}
-            <div className="p-3.5 rounded-2xl bg-[#131326]/90 border border-sky-500/25 flex flex-col justify-between gap-2">
+            <div className="p-3.5 rounded-2xl bg-[#FFF8FA] dark:bg-[#131326]/90 border border-[#F2C5D5] dark:border-sky-500/25 flex flex-col justify-between gap-2 shadow-2xs">
               <div className="flex items-center gap-2.5">
-                <div className="w-11 h-11 rounded-2xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
+                <div className="w-11 h-11 rounded-2xl bg-[#FCE7EF] dark:bg-sky-500/15 border border-[#F2C5D5] dark:border-sky-500/30 text-[#D64D83] dark:text-sky-400 flex items-center justify-center shrink-0">
                   <Ruler className="w-6 h-6 stroke-[2]" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-sky-300/90 block">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[#886576] dark:text-sky-300/90 block">
                     Altura
                   </span>
-                  <div className="font-serif font-bold text-2xl sm:text-[26px] text-slate-50 tabular-nums leading-tight">
+                  <div className="font-serif font-bold text-2xl sm:text-[26px] text-[#542639] dark:text-slate-50 tabular-nums leading-tight">
                     {formatCm(latestRecord.heightCm)}
-                    <span className="text-xs font-sans font-semibold text-stone-400 ml-1">cm</span>
+                    <span className="text-xs font-sans font-semibold text-[#886576] dark:text-stone-400 ml-1">cm</span>
                   </div>
                 </div>
               </div>
               {latestHeightDiff !== null && (
                 <div
-                  className={`text-[11px] font-semibold tabular-nums pt-1 border-t border-slate-800/80 ${
-                    latestHeightDiff >= 0 ? 'text-sky-300' : 'text-rose-300'
+                  className={`text-[11px] font-semibold tabular-nums pt-1 border-t border-[#F2C5D5]/60 dark:border-slate-800/80 ${
+                    latestHeightDiff >= 0
+                      ? 'text-[#24473D] bg-[#DCEADF] dark:bg-transparent px-2 py-0.5 rounded-lg dark:p-0 dark:text-sky-300'
+                      : 'text-[#D64D83] dark:text-rose-300'
                   }`}
                 >
                   {latestHeightDiff >= 0 ? '+' : ''}
@@ -644,14 +648,14 @@ export function MyBabyTab() {
                 <button
                   type="button"
                   onClick={closeMeasurementForm}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm flex items-center justify-center transition-all active:scale-98 min-h-[48px] cursor-pointer"
+                  className="w-full py-3.5 px-4 rounded-2xl bg-rose-100 hover:bg-rose-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-rose-900 dark:text-slate-200 font-semibold text-sm flex items-center justify-center transition-all active:scale-98 min-h-[48px] cursor-pointer"
                 >
                   Cancelar
                 </button>
               )}
               <button
                 type="submit"
-                className="w-full py-3.5 px-4 rounded-2xl bg-[#24473D] dark:bg-emerald-600 hover:bg-[#1a342c] dark:hover:bg-emerald-500 text-white font-serif font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-98 min-h-[48px] cursor-pointer"
+                className="w-full py-3.5 px-4 rounded-2xl bg-rose-500 hover:bg-rose-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-serif font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-98 min-h-[48px] cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 <span>{isEditingModal ? 'Salvar alterações' : 'Salvar medição'}</span>
@@ -778,21 +782,21 @@ export function MyBabyTab() {
                   </div>
 
                   {/* Interval caption */}
-                  <div className="text-[11px] text-center text-stone-400 tabular-nums">
-                    Evolução de <strong className="text-slate-200">{formatMonthLabel(earlierRec.date, pairSpansYears)}</strong> para{' '}
-                    <strong className="text-slate-200">{formatMonthLabel(laterRec.date, pairSpansYears)}</strong> ·{' '}
+                  <div className="text-[11px] text-center text-[#8C5A70] dark:text-stone-400 tabular-nums">
+                    Evolução de <strong className="text-[#4A2034] dark:text-slate-200">{formatMonthLabel(earlierRec.date, pairSpansYears)}</strong> para{' '}
+                    <strong className="text-[#4A2034] dark:text-slate-200">{formatMonthLabel(laterRec.date, pairSpansYears)}</strong> ·{' '}
                     {gapDays} {gapDays === 1 ? 'dia' : 'dias'}
                   </div>
 
                   {/* Side-by-side Column Charts (Weight & Height) */}
                   <div className="grid grid-cols-2 gap-3">
                     {/* Weight Comparison Column Card */}
-                    <div className="p-3.5 rounded-2xl bg-stone-50 dark:bg-[#15152b] border border-stone-200/70 dark:border-slate-800 space-y-2.5">
+                    <div className="p-3.5 rounded-2xl bg-[#FFF5F8] dark:bg-[#15152b] border border-rose-200/80 dark:border-slate-800 space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-emerald-400">Peso (kg)</span>
+                        <span className="text-xs font-bold text-rose-600 dark:text-emerald-400">Peso (kg)</span>
                         <span
                           className={`text-[11px] font-bold tabular-nums ${
-                            weightDelta >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            weightDelta >= 0 ? 'text-rose-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'
                           }`}
                         >
                           {weightDelta >= 0 ? '+' : ''}
@@ -802,27 +806,27 @@ export function MyBabyTab() {
 
                       <div className="h-32 flex items-end justify-around gap-3 pt-4 px-1">
                         <div className="flex-1 flex flex-col items-center h-full justify-end">
-                          <span className="text-[11px] font-bold text-slate-300 tabular-nums mb-1">
+                          <span className="text-[11px] font-bold text-[#7A3B58] dark:text-slate-300 tabular-nums mb-1">
                             {formatKg(earlierRec.weightKg)}
                           </span>
                           <div
-                            className="w-full max-w-[42px] rounded-t-xl bg-emerald-900/70 border border-emerald-700/60 transition-all duration-300"
+                            className="w-full max-w-[42px] rounded-t-xl bg-rose-200 dark:bg-emerald-900/70 border border-rose-300 dark:border-emerald-700/60 transition-all duration-300"
                             style={{ height: `${wPctA}%` }}
                           />
-                          <span className="text-[10px] text-stone-400 mt-1.5 tabular-nums truncate">
+                          <span className="text-[10px] text-[#9A607A] dark:text-stone-400 mt-1.5 tabular-nums truncate">
                             {formatMonthLabel(earlierRec.date, pairSpansYears)}
                           </span>
                         </div>
 
                         <div className="flex-1 flex flex-col items-center h-full justify-end">
-                          <span className="text-[11px] font-bold text-emerald-300 tabular-nums mb-1">
+                          <span className="text-[11px] font-bold text-rose-600 dark:text-emerald-300 tabular-nums mb-1">
                             {formatKg(laterRec.weightKg)}
                           </span>
                           <div
-                            className="w-full max-w-[42px] rounded-t-xl bg-emerald-500 transition-all duration-300"
+                            className="w-full max-w-[42px] rounded-t-xl bg-rose-500 dark:bg-emerald-500 transition-all duration-300"
                             style={{ height: `${wPctB}%` }}
                           />
-                          <span className="text-[10px] text-emerald-300 font-semibold mt-1.5 tabular-nums truncate">
+                          <span className="text-[10px] text-rose-600 dark:text-emerald-300 font-semibold mt-1.5 tabular-nums truncate">
                             {formatMonthLabel(laterRec.date, pairSpansYears)}
                           </span>
                         </div>
@@ -830,12 +834,12 @@ export function MyBabyTab() {
                     </div>
 
                     {/* Height Comparison Column Card */}
-                    <div className="p-3.5 rounded-2xl bg-stone-50 dark:bg-[#15152b] border border-stone-200/70 dark:border-slate-800 space-y-2.5">
+                    <div className="p-3.5 rounded-2xl bg-[#FFF5F8] dark:bg-[#15152b] border border-pink-200/80 dark:border-slate-800 space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-sky-400">Altura (cm)</span>
+                        <span className="text-xs font-bold text-pink-600 dark:text-sky-400">Altura (cm)</span>
                         <span
                           className={`text-[11px] font-bold tabular-nums ${
-                            heightDelta >= 0 ? 'text-sky-400' : 'text-rose-400'
+                            heightDelta >= 0 ? 'text-pink-600 dark:text-sky-400' : 'text-rose-500 dark:text-rose-400'
                           }`}
                         >
                           {heightDelta >= 0 ? '+' : ''}
@@ -845,27 +849,27 @@ export function MyBabyTab() {
 
                       <div className="h-32 flex items-end justify-around gap-3 pt-4 px-1">
                         <div className="flex-1 flex flex-col items-center h-full justify-end">
-                          <span className="text-[11px] font-bold text-slate-300 tabular-nums mb-1">
+                          <span className="text-[11px] font-bold text-[#7A3B58] dark:text-slate-300 tabular-nums mb-1">
                             {formatCm(earlierRec.heightCm)}
                           </span>
                           <div
-                            className="w-full max-w-[42px] rounded-t-xl bg-sky-900/70 border border-sky-700/60 transition-all duration-300"
+                            className="w-full max-w-[42px] rounded-t-xl bg-pink-200 dark:bg-sky-900/70 border border-pink-300 dark:border-sky-700/60 transition-all duration-300"
                             style={{ height: `${hPctA}%` }}
                           />
-                          <span className="text-[10px] text-stone-400 mt-1.5 tabular-nums truncate">
+                          <span className="text-[10px] text-[#9A607A] dark:text-stone-400 mt-1.5 tabular-nums truncate">
                             {formatMonthLabel(earlierRec.date, pairSpansYears)}
                           </span>
                         </div>
 
                         <div className="flex-1 flex flex-col items-center h-full justify-end">
-                          <span className="text-[11px] font-bold text-sky-300 tabular-nums mb-1">
+                          <span className="text-[11px] font-bold text-pink-600 dark:text-sky-300 tabular-nums mb-1">
                             {formatCm(laterRec.heightCm)}
                           </span>
                           <div
-                            className="w-full max-w-[42px] rounded-t-xl bg-sky-500 transition-all duration-300"
+                            className="w-full max-w-[42px] rounded-t-xl bg-pink-500 dark:bg-sky-500 transition-all duration-300"
                             style={{ height: `${hPctB}%` }}
                           />
-                          <span className="text-[10px] text-sky-300 font-semibold mt-1.5 tabular-nums truncate">
+                          <span className="text-[10px] text-pink-600 dark:text-sky-300 font-semibold mt-1.5 tabular-nums truncate">
                             {formatMonthLabel(laterRec.date, pairSpansYears)}
                           </span>
                         </div>
@@ -883,16 +887,16 @@ export function MyBabyTab() {
       {chartItems.length > 0 ? (
         <section className="space-y-3">
           {/* Weight Column Chart */}
-          <div className="bg-white dark:bg-[#1a1a33] rounded-3xl p-4 sm:p-5 border border-stone-200/70 dark:border-slate-800 space-y-3">
+          <div className="bg-white dark:bg-[#1a1a33] rounded-3xl p-4 sm:p-5 border border-[#F2C5D5] dark:border-slate-800 space-y-3 shadow-2xs">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-emerald-400" />
-                <h2 className="font-serif font-bold text-base text-slate-800 dark:text-slate-100">
+                <BarChart3 className="w-4 h-4 text-[#D64D83] dark:text-emerald-400" />
+                <h2 className="font-serif font-bold text-base text-[#542639] dark:text-slate-100">
                   Gráfico de Peso (kg)
                 </h2>
               </div>
               {chartItems.length >= 2 && (
-                <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1 tabular-nums">
+                <span className="text-[11px] font-semibold text-[#24473D] bg-[#DCEADF] dark:bg-transparent px-2 py-0.5 rounded-lg dark:p-0 dark:text-emerald-400 flex items-center gap-1 tabular-nums">
                   <TrendingUp className="w-3.5 h-3.5" />
                   {chartItems[chartItems.length - 1].weightKg - chartItems[0].weightKg >= 0 ? '+' : ''}
                   {formatKg(chartItems[chartItems.length - 1].weightKg - chartItems[0].weightKg)} kg no total
@@ -900,7 +904,7 @@ export function MyBabyTab() {
               )}
             </div>
 
-            <div className="h-44 flex items-end gap-2 pt-5 pb-1 px-1 border-b border-stone-200/60 dark:border-slate-800">
+            <div className="h-44 flex items-end gap-2 pt-5 pb-1 px-1 border-b border-[#F2C5D5]/70 dark:border-slate-800">
               {chartItems.map((item, idx) => {
                 const isLast = idx === chartItems.length - 1;
                 const normalized = (item.weightKg - weightFloor) / weightRange;
@@ -916,7 +920,7 @@ export function MyBabyTab() {
                   >
                     <span
                       className={`text-[10px] sm:text-[11px] font-bold tabular-nums mb-1 truncate ${
-                        isLast ? 'text-emerald-300' : 'text-stone-400'
+                        isLast ? 'text-[#D64D83] dark:text-emerald-300' : 'text-[#886576] dark:text-stone-400'
                       }`}
                     >
                       {formatKg(item.weightKg)}
@@ -924,8 +928,8 @@ export function MyBabyTab() {
                     <div
                       className={`w-full max-w-[38px] rounded-t-xl transition-all duration-300 ${
                         isLast
-                          ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.28)]'
-                          : 'bg-[#24473D] dark:bg-emerald-900/70 border border-emerald-700/40'
+                          ? 'bg-[#D64D83] dark:bg-emerald-500 shadow-[0_0_12px_rgba(214,77,131,0.28)] dark:shadow-[0_0_12px_rgba(16,185,129,0.28)]'
+                          : 'bg-[#FCE7EF] dark:bg-emerald-900/70 border border-[#F2C5D5] dark:border-emerald-700/40'
                       }`}
                       style={{ height: `${heightPct}%` }}
                     />
@@ -941,7 +945,7 @@ export function MyBabyTab() {
                   <div
                     key={`w-lbl-${item.id}`}
                     className={`flex-1 text-center text-[10px] tabular-nums truncate ${
-                      isLast ? 'text-emerald-300 font-bold' : 'text-stone-400'
+                      isLast ? 'text-[#D64D83] dark:text-emerald-300 font-bold' : 'text-[#886576] dark:text-stone-400'
                     }`}
                   >
                     {formatMonthLabel(item.date, chartSpansMultipleYears)}
@@ -952,16 +956,16 @@ export function MyBabyTab() {
           </div>
 
           {/* Height Column Chart */}
-          <div className="bg-white dark:bg-[#1a1a33] rounded-3xl p-4 sm:p-5 border border-stone-200/70 dark:border-slate-800 space-y-3">
+          <div className="bg-white dark:bg-[#1a1a33] rounded-3xl p-4 sm:p-5 border border-[#F2C5D5] dark:border-slate-800 space-y-3 shadow-2xs">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-sky-400" />
-                <h2 className="font-serif font-bold text-base text-slate-800 dark:text-slate-100">
+                <BarChart3 className="w-4 h-4 text-[#D64D83] dark:text-sky-400" />
+                <h2 className="font-serif font-bold text-base text-[#542639] dark:text-slate-100">
                   Gráfico de Altura (cm)
                 </h2>
               </div>
               {chartItems.length >= 2 && (
-                <span className="text-[11px] font-semibold text-sky-400 flex items-center gap-1 tabular-nums">
+                <span className="text-[11px] font-semibold text-[#24473D] bg-[#DCEADF] dark:bg-transparent px-2 py-0.5 rounded-lg dark:p-0 dark:text-sky-400 flex items-center gap-1 tabular-nums">
                   <TrendingUp className="w-3.5 h-3.5" />
                   {chartItems[chartItems.length - 1].heightCm - chartItems[0].heightCm >= 0 ? '+' : ''}
                   {formatCm(chartItems[chartItems.length - 1].heightCm - chartItems[0].heightCm)} cm no total
@@ -969,7 +973,7 @@ export function MyBabyTab() {
               )}
             </div>
 
-            <div className="h-44 flex items-end gap-2 pt-5 pb-1 px-1 border-b border-stone-200/60 dark:border-slate-800">
+            <div className="h-44 flex items-end gap-2 pt-5 pb-1 px-1 border-b border-[#F2C5D5]/70 dark:border-slate-800">
               {chartItems.map((item, idx) => {
                 const isLast = idx === chartItems.length - 1;
                 const normalized = (item.heightCm - heightFloor) / heightRange;
@@ -985,7 +989,7 @@ export function MyBabyTab() {
                   >
                     <span
                       className={`text-[10px] sm:text-[11px] font-bold tabular-nums mb-1 truncate ${
-                        isLast ? 'text-sky-300' : 'text-stone-400'
+                        isLast ? 'text-[#D64D83] dark:text-sky-300' : 'text-[#886576] dark:text-stone-400'
                       }`}
                     >
                       {formatCm(item.heightCm)}
@@ -993,8 +997,8 @@ export function MyBabyTab() {
                     <div
                       className={`w-full max-w-[38px] rounded-t-xl transition-all duration-300 ${
                         isLast
-                          ? 'bg-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.28)]'
-                          : 'bg-sky-900/70 border border-sky-700/40'
+                          ? 'bg-[#D64D83] dark:bg-sky-500 shadow-[0_0_12px_rgba(214,77,131,0.28)] dark:shadow-[0_0_12px_rgba(14,165,233,0.28)]'
+                          : 'bg-[#FCE7EF] dark:bg-sky-900/70 border border-[#F2C5D5] dark:border-sky-700/40'
                       }`}
                       style={{ height: `${heightPct}%` }}
                     />
@@ -1010,7 +1014,7 @@ export function MyBabyTab() {
                   <div
                     key={`h-lbl-${item.id}`}
                     className={`flex-1 text-center text-[10px] tabular-nums truncate ${
-                      isLast ? 'text-sky-300 font-bold' : 'text-stone-400'
+                      isLast ? 'text-[#D64D83] dark:text-sky-300 font-bold' : 'text-[#886576] dark:text-stone-400'
                     }`}
                   >
                     {formatMonthLabel(item.date, chartSpansMultipleYears)}
@@ -1097,7 +1101,7 @@ export function MyBabyTab() {
                           <button
                             type="button"
                             onClick={() => setConfirmDeleteId(null)}
-                            className="px-2 py-1.5 rounded-lg bg-slate-800 text-stone-300 text-[11px] font-medium min-h-[36px]"
+                            className="px-2 py-1.5 rounded-lg bg-rose-100 dark:bg-slate-800 text-rose-900 dark:text-stone-300 text-[11px] font-medium min-h-[36px]"
                           >
                             Cancelar
                           </button>

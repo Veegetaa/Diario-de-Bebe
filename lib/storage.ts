@@ -106,7 +106,7 @@ export function loadThemeOverrideFromStorage(): 'auto' | 'light' | 'dark' {
   if (typeof window === 'undefined') return 'dark';
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.THEME_OVERRIDE);
-    if (raw === 'dark') return 'dark';
+    if (raw === 'light' || raw === 'dark') return raw;
   } catch (e) {
     console.error('Error reading theme from localStorage', e);
   }

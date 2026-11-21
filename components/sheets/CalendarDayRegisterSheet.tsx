@@ -301,7 +301,7 @@ function CalendarRegisterForm({
         {selectMed && (
           <div className="px-3.5 pb-3.5 pt-1 space-y-2.5 border-t border-cyan-500/20">
             <div>
-              <label className="block text-[11px] font-semibold text-cyan-300 mb-1">
+              <label className="block text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 mb-1">
                 Qual remédio ou vitamina?
               </label>
               <input
@@ -313,7 +313,7 @@ function CalendarRegisterForm({
                   setError(null);
                 }}
                 placeholder="Ex: Vitamina D (2 gotas), Paracetamol..."
-                className="w-full px-3 py-2.5 rounded-xl bg-[#121224] border border-cyan-500/30 text-sm text-slate-100 placeholder:text-stone-500 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-[#121224] border border-cyan-300 dark:border-cyan-500/30 text-sm text-[#4A2034] dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
 
@@ -327,7 +327,7 @@ function CalendarRegisterForm({
                     setMedName(s);
                     setError(null);
                   }}
-                  className="px-2.5 py-1 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-500/30 text-[11px] font-medium text-cyan-200 transition-colors"
+                  className="px-2.5 py-1 rounded-lg bg-cyan-100/80 dark:bg-cyan-950/60 hover:bg-cyan-200/80 dark:hover:bg-cyan-900/70 border border-cyan-300 dark:border-cyan-500/30 text-[11px] font-medium text-cyan-800 dark:text-cyan-200 transition-colors cursor-pointer"
                 >
                   {s}
                 </button>
@@ -336,16 +336,16 @@ function CalendarRegisterForm({
 
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="block text-[11px] text-stone-400 mb-1">Horário</label>
+                <label className="block text-[11px] text-[#8C5A70] dark:text-stone-400 mb-1">Horário</label>
                 <input
                   type="time"
                   value={medTime}
                   onChange={(e) => setMedTime(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#121224] border border-slate-700 text-xs font-semibold text-slate-100 tabular-nums min-h-[40px]"
+                  className="w-full px-2.5 py-2 rounded-xl bg-white dark:bg-[#121224] border border-rose-200 dark:border-slate-700 text-xs font-semibold text-[#4A2034] dark:text-slate-100 tabular-nums min-h-[40px]"
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-[11px] text-stone-400 mb-1">
+                <label className="block text-[11px] text-[#8C5A70] dark:text-stone-400 mb-1">
                   Dose / detalhe (opcional)
                 </label>
                 <input
@@ -354,7 +354,7 @@ function CalendarRegisterForm({
                   value={medNotes}
                   onChange={(e) => setMedNotes(e.target.value)}
                   placeholder="Ex: 5 gotas após mamada"
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#121224] border border-slate-700 text-xs text-slate-100 placeholder:text-stone-500 min-h-[40px]"
+                  className="w-full px-2.5 py-2 rounded-xl bg-white dark:bg-[#121224] border border-rose-200 dark:border-slate-700 text-xs text-[#4A2034] dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 min-h-[40px]"
                 />
               </div>
             </div>
@@ -366,8 +366,8 @@ function CalendarRegisterForm({
       <div
         className={`rounded-2xl border transition-all overflow-hidden ${
           selectVaccine
-            ? 'bg-violet-950/35 border-violet-500/60'
-            : 'bg-stone-50 dark:bg-[#15152b] border-stone-200 dark:border-slate-800'
+            ? 'bg-fuchsia-50/80 dark:bg-violet-950/35 border-fuchsia-300 dark:border-violet-500/60'
+            : 'bg-rose-50/50 dark:bg-[#15152b] border-rose-200/80 dark:border-slate-800'
         }`}
       >
         <button
@@ -391,15 +391,15 @@ function CalendarRegisterForm({
               {selectVaccine && <Check className="w-3.5 h-3.5 stroke-[3]" />}
             </span>
 
-            <div className="w-9 h-9 rounded-xl bg-violet-950/70 border border-violet-500/30 text-violet-300 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-fuchsia-100 dark:bg-violet-950/70 border border-fuchsia-300 dark:border-violet-500/30 text-fuchsia-700 dark:text-violet-300 flex items-center justify-center shrink-0">
               <Syringe className="w-4 h-4" />
             </div>
 
             <div className="min-w-0">
-              <span className="block text-sm font-bold text-slate-900 dark:text-slate-100">
+              <span className="block text-sm font-bold text-[#4A2034] dark:text-slate-100">
                 Vacina
               </span>
-              <span className="block text-[11px] text-stone-400">
+              <span className="block text-[11px] text-[#8C5A70] dark:text-stone-400">
                 {existingVaccinesCount > 0
                   ? `${existingVaccinesCount} já marcada(s) neste dia · adicione outra`
                   : 'Registrar vacina aplicada no dia'}
@@ -409,9 +409,9 @@ function CalendarRegisterForm({
         </button>
 
         {selectVaccine && (
-          <div className="px-3.5 pb-3.5 pt-1 space-y-2.5 border-t border-violet-500/20">
+          <div className="px-3.5 pb-3.5 pt-1 space-y-2.5 border-t border-fuchsia-300/60 dark:border-violet-500/20">
             <div>
-              <label className="block text-[11px] font-semibold text-violet-300 mb-1">
+              <label className="block text-[11px] font-semibold text-fuchsia-700 dark:text-violet-300 mb-1">
                 Qual vacina?
               </label>
               <input
@@ -423,7 +423,7 @@ function CalendarRegisterForm({
                   setError(null);
                 }}
                 placeholder="Ex: Pentavalente (1ª dose), Rotavírus..."
-                className="w-full px-3 py-2.5 rounded-xl bg-[#121224] border border-violet-500/30 text-sm text-slate-100 placeholder:text-stone-500 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-violet-500"
+                className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-[#121224] border border-fuchsia-300 dark:border-violet-500/30 text-sm text-[#4A2034] dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-violet-500"
               />
             </div>
 
@@ -437,7 +437,7 @@ function CalendarRegisterForm({
                     setVaccineName(s);
                     setError(null);
                   }}
-                  className="px-2.5 py-1 rounded-lg bg-violet-950/60 hover:bg-violet-900/70 border border-violet-500/30 text-[11px] font-medium text-violet-200 transition-colors"
+                  className="px-2.5 py-1 rounded-lg bg-fuchsia-100/80 dark:bg-violet-950/60 hover:bg-fuchsia-200/80 dark:hover:bg-violet-900/70 border border-fuchsia-300 dark:border-violet-500/30 text-[11px] font-medium text-fuchsia-800 dark:text-violet-200 transition-colors cursor-pointer"
                 >
                   {s}
                 </button>
@@ -446,16 +446,16 @@ function CalendarRegisterForm({
 
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="block text-[11px] text-stone-400 mb-1">Horário</label>
+                <label className="block text-[11px] text-[#8C5A70] dark:text-stone-400 mb-1">Horário</label>
                 <input
                   type="time"
                   value={vaccineTime}
                   onChange={(e) => setVaccineTime(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#121224] border border-slate-700 text-xs font-semibold text-slate-100 tabular-nums min-h-[40px]"
+                  className="w-full px-2.5 py-2 rounded-xl bg-white dark:bg-[#121224] border border-rose-200 dark:border-slate-700 text-xs font-semibold text-[#4A2034] dark:text-slate-100 tabular-nums min-h-[40px]"
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-[11px] text-stone-400 mb-1">
+                <label className="block text-[11px] text-[#8C5A70] dark:text-stone-400 mb-1">
                   Observação / reação (opcional)
                 </label>
                 <input
@@ -464,7 +464,7 @@ function CalendarRegisterForm({
                   value={vaccineNotes}
                   onChange={(e) => setVaccineNotes(e.target.value)}
                   placeholder="Ex: Coxa direita, sem febre"
-                  className="w-full px-2.5 py-2 rounded-xl bg-[#121224] border border-slate-700 text-xs text-slate-100 placeholder:text-stone-500 min-h-[40px]"
+                  className="w-full px-2.5 py-2 rounded-xl bg-white dark:bg-[#121224] border border-rose-200 dark:border-slate-700 text-xs text-[#4A2034] dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 min-h-[40px]"
                 />
               </div>
             </div>

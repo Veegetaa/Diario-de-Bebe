@@ -19,7 +19,9 @@ export function StarrySky() {
     }));
   }, []);
 
-  if (effectiveTheme !== 'dark') return null;
+  if (effectiveTheme !== 'dark') {
+    return null;
+  }
 
   return (
     <div
