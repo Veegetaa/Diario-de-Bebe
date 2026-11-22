@@ -26,6 +26,9 @@
         "growthRecords": {
           "type": "array"
         },
+        "growthUpdatedAt": {
+          "type": "number"
+        },
         "createdAt": {
           "type": "number"
         },

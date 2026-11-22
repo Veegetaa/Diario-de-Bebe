@@ -10,6 +10,7 @@ const STORAGE_KEYS = {
   FAMILY_CODE: 'diario_do_bebe_family_code_v1',
   DAY_COLORS: 'diario_do_bebe_day_colors_v1',
   GROWTH_RECORDS: 'diario_do_bebe_growth_records_v1',
+  GROWTH_UPDATED_AT: 'diario_do_bebe_growth_updated_at_v1',
 };
 
 export const DEFAULT_PROFILE: BabyProfile = {
@@ -191,3 +192,29 @@ export function saveGrowthRecordsToStorage(growthRecords: GrowthRecord[]): void 
   }
 }
 
+export function loadGrowthUpdatedAtFromStorage(): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.GROWTH_UPDATED_AT);
+    if (raw) {
+      const parsed = Number(raw);
+      if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    }
+  } catch (e) {
+    console.error('Error reading growth updated timestamp from localStorage', e);
+  }
+  return 0;
+}
+
+export function saveGrowthUpdatedAtToStorage(ts: number): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (ts > 0) {
+      localStorage.setItem(STORAGE_KEYS.GROWTH_UPDATED_AT, String(ts));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.GROWTH_UPDATED_AT);
+    }
+  } catch (e) {
+    console.error('Error saving growth updated timestamp to localStorage', e);
+  }
+}

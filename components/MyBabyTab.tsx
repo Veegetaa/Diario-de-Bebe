@@ -227,26 +227,29 @@ export function MyBabyTab() {
 
     const cleanWeight = Number(parsedW.toFixed(2));
     const cleanHeight = Number(parsedH.toFixed(1));
+    const cleanNotes = notes.trim();
 
     if (editingId) {
       const existing = growthRecords.find((r) => r.id === editingId);
-      updateGrowthRecord({
+      const updatedEntry: GrowthRecord = {
         id: editingId,
         date,
         weightKg: cleanWeight,
         heightCm: cleanHeight,
-        notes: notes.trim() || undefined,
         createdAt: existing?.createdAt || Date.now(),
-      });
+        ...(cleanNotes ? { notes: cleanNotes } : {}),
+      };
+      updateGrowthRecord(updatedEntry);
     } else {
-      addGrowthRecord({
+      const newEntry: GrowthRecord = {
         id: `growth-${Date.now()}`,
         date,
         weightKg: cleanWeight,
         heightCm: cleanHeight,
-        notes: notes.trim() || undefined,
         createdAt: Date.now(),
-      });
+        ...(cleanNotes ? { notes: cleanNotes } : {}),
+      };
+      addGrowthRecord(newEntry);
     }
 
     setShowForm(false);

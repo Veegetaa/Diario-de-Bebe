@@ -24,8 +24,31 @@ export interface SharedDiaryData {
   activeSleep?: ActiveSleepSession | null;
   dayColors?: DayColorsMap;
   growthRecords?: GrowthRecord[];
+  growthUpdatedAt?: number;
   updatedAt?: number;
   createdAt?: number;
+}
+
+/**
+ * Recursively removes keys with `undefined` values so Firestore setDoc() never
+ * rejects a document or array item with "Unsupported field value: undefined".
+ */
+export function sanitizeForFirestore<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => item !== undefined)
+      .map((item) => sanitizeForFirestore(item)) as unknown as T;
+  }
+  if (value !== null && typeof value === 'object') {
+    const cleaned: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (v !== undefined) {
+        cleaned[k] = sanitizeForFirestore(v);
+      }
+    }
+    return cleaned as T;
+  }
+  return value;
 }
 
 /**
@@ -56,7 +79,7 @@ export async function syncLocalRecordsToCloud(
     const batch = writeBatch(db);
     localRecords.forEach((rec) => {
       const recRef = doc(db, 'diaries', norm, 'records', rec.id);
-      batch.set(recRef, rec, { merge: true });
+      batch.set(recRef, sanitizeForFirestore(rec), { merge: true });
     });
     await batch.commit();
   } catch (error) {
@@ -127,31 +150,34 @@ export async function initializeDiaryInFirestore(
   code: string,
   profile: BabyProfile,
   initialRecords: BabyRecord[],
-  activeSleep: ActiveSleepSession | null = null
+  activeSleep: ActiveSleepSession | null = null,
+  growthRecords: GrowthRecord[] = [],
+  dayColors: DayColorsMap = {}
 ): Promise<void> {
   const norm = normalizeFamilyCode(code);
   const diaryPath = `diaries/${norm}`;
 
   try {
+    const now = Date.now();
     const diaryRef = doc(db, 'diaries', norm);
-    await setDoc(
-      diaryRef,
-      {
-        code: norm,
-        babyProfile: profile,
-        activeSleep: activeSleep || null,
-        updatedAt: Date.now(),
-        createdAt: Date.now(),
-      },
-      { merge: true }
-    );
+    const payload = sanitizeForFirestore({
+      code: norm,
+      babyProfile: profile,
+      activeSleep: activeSleep || null,
+      dayColors,
+      growthRecords,
+      growthUpdatedAt: growthRecords.length > 0 ? now : 0,
+      updatedAt: now,
+      createdAt: now,
+    });
+    await setDoc(diaryRef, payload, { merge: true });
 
     // Batch upload initial records if any
     if (initialRecords.length > 0) {
       const batch = writeBatch(db);
       initialRecords.forEach((rec) => {
         const recRef = doc(db, 'diaries', norm, 'records', rec.id);
-        batch.set(recRef, rec);
+        batch.set(recRef, sanitizeForFirestore(rec));
       });
       await batch.commit();
     }
@@ -167,7 +193,7 @@ export async function saveRecordToCloud(familyCode: string, record: BabyRecord):
   const norm = normalizeFamilyCode(familyCode);
   const path = `diaries/${norm}/records/${record.id}`;
   try {
-    await setDoc(doc(db, 'diaries', norm, 'records', record.id), record);
+    await setDoc(doc(db, 'diaries', norm, 'records', record.id), sanitizeForFirestore(record));
     // Also bump updatedAt on diary root
     await setDoc(
       doc(db, 'diaries', norm),
@@ -206,10 +232,10 @@ export async function updateProfileInCloud(familyCode: string, profile: BabyProf
   try {
     await setDoc(
       doc(db, 'diaries', norm),
-      {
+      sanitizeForFirestore({
         babyProfile: profile,
         updatedAt: Date.now(),
-      },
+      }),
       { merge: true }
     );
   } catch (error) {
@@ -229,10 +255,10 @@ export async function updateActiveSleepInCloud(
   try {
     await setDoc(
       doc(db, 'diaries', norm),
-      {
+      sanitizeForFirestore({
         activeSleep: session || null,
         updatedAt: Date.now(),
-      },
+      }),
       { merge: true }
     );
   } catch (error) {
@@ -264,10 +290,10 @@ export async function updateDayColorInCloud(
 
     await setDoc(
       diaryRef,
-      {
+      sanitizeForFirestore({
         dayColors: nextColors,
         updatedAt: Date.now(),
-      },
+      }),
       { merge: true }
     );
   } catch (error) {
@@ -280,15 +306,18 @@ export async function updateDayColorInCloud(
  */
 export async function updateGrowthRecordsInCloud(
   familyCode: string,
-  growthRecords: GrowthRecord[]
+  growthRecords: GrowthRecord[],
+  growthUpdatedAt: number = Date.now()
 ): Promise<void> {
   const norm = normalizeFamilyCode(familyCode);
   const path = `diaries/${norm}`;
   try {
+    const sanitizedRecords = sanitizeForFirestore(growthRecords);
     await setDoc(
       doc(db, 'diaries', norm),
       {
-        growthRecords,
+        growthRecords: sanitizedRecords,
+        growthUpdatedAt,
         updatedAt: Date.now(),
       },
       { merge: true }
