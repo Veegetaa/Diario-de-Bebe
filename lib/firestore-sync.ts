@@ -29,6 +29,47 @@ export interface SharedDiaryData {
   createdAt?: number;
 }
 
+export interface CloudGrowthRecordDoc extends GrowthRecord {
+  type: 'crescimento';
+}
+
+export function isGrowthRecordDoc(value: unknown): value is CloudGrowthRecordDoc {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    obj.type === 'crescimento' &&
+    typeof obj.id === 'string' &&
+    typeof obj.date === 'string' &&
+    typeof obj.weightKg === 'number' &&
+    typeof obj.heightCm === 'number'
+  );
+}
+
+export function docToGrowthRecord(docData: CloudGrowthRecordDoc): GrowthRecord {
+  const cleanNotes = typeof docData.notes === 'string' ? docData.notes.trim() : '';
+  return {
+    id: docData.id,
+    date: docData.date,
+    weightKg: docData.weightKg,
+    heightCm: docData.heightCm,
+    createdAt: typeof docData.createdAt === 'number' ? docData.createdAt : Date.now(),
+    ...(cleanNotes ? { notes: cleanNotes } : {}),
+  };
+}
+
+export function growthRecordToDoc(entry: GrowthRecord): CloudGrowthRecordDoc {
+  const cleanNotes = typeof entry.notes === 'string' ? entry.notes.trim() : '';
+  return sanitizeForFirestore({
+    id: entry.id,
+    type: 'crescimento' as const,
+    date: entry.date,
+    weightKg: entry.weightKg,
+    heightCm: entry.heightCm,
+    createdAt: typeof entry.createdAt === 'number' ? entry.createdAt : Date.now(),
+    ...(cleanNotes ? { notes: cleanNotes } : {}),
+  });
+}
+
 /**
  * Recursively removes keys with `undefined` values so Firestore setDoc() never
  * rejects a document or array item with "Unsupported field value: undefined".
@@ -116,11 +157,12 @@ export interface FetchFullDiaryResult {
   success: boolean;
   diaryData: SharedDiaryData | null;
   records: BabyRecord[];
+  growthRecords: GrowthRecord[];
   error?: string;
 }
 
 /**
- * Fetches the entire diary including profile, active sleep, and all records in one call
+ * Fetches the entire diary including profile, active sleep, routine records, and growth measurements
  */
 export async function fetchFullDiaryData(diaryId: string): Promise<FetchFullDiaryResult> {
   const norm = normalizeFamilyCode(diaryId);
@@ -132,14 +174,20 @@ export async function fetchFullDiaryData(diaryId: string): Promise<FetchFullDiar
 
     const diaryData = diarySnap.exists() ? (diarySnap.data() as SharedDiaryData) : null;
     const records: BabyRecord[] = [];
+    const growthRecords: GrowthRecord[] = [];
     recordsSnap.forEach((d) => {
-      records.push(d.data() as BabyRecord);
+      const data = d.data();
+      if (isGrowthRecordDoc(data)) {
+        growthRecords.push(docToGrowthRecord(data));
+      } else {
+        records.push(data as BabyRecord);
+      }
     });
 
-    return { success: true, diaryData, records };
+    return { success: true, diaryData, records, growthRecords };
   } catch (error) {
     console.warn('Error fetching full diary data:', error);
-    return { success: false, diaryData: null, records: [], error: String(error) };
+    return { success: false, diaryData: null, records: [], growthRecords: [], error: String(error) };
   }
 }
 
@@ -172,12 +220,16 @@ export async function initializeDiaryInFirestore(
     });
     await setDoc(diaryRef, payload, { merge: true });
 
-    // Batch upload initial records if any
-    if (initialRecords.length > 0) {
+    // Batch upload initial routine records and growth measurements if any
+    if (initialRecords.length > 0 || growthRecords.length > 0) {
       const batch = writeBatch(db);
       initialRecords.forEach((rec) => {
         const recRef = doc(db, 'diaries', norm, 'records', rec.id);
         batch.set(recRef, sanitizeForFirestore(rec));
+      });
+      growthRecords.forEach((entry) => {
+        const growthRef = doc(db, 'diaries', norm, 'records', entry.id);
+        batch.set(growthRef, growthRecordToDoc(entry));
       });
       await batch.commit();
     }
@@ -302,7 +354,61 @@ export async function updateDayColorInCloud(
 }
 
 /**
- * Updates baby growth measurements (peso & altura) in the cloud
+ * Saves or updates a single growth measurement document in the records subcollection
+ */
+export async function saveGrowthRecordToCloud(
+  familyCode: string,
+  entry: GrowthRecord
+): Promise<void> {
+  const norm = normalizeFamilyCode(familyCode);
+  const path = `diaries/${norm}/records/${entry.id}`;
+  try {
+    await setDoc(doc(db, 'diaries', norm, 'records', entry.id), growthRecordToDoc(entry));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Batch-uploads unsynced local growth measurements to the records subcollection
+ */
+export async function syncLocalGrowthRecordsToCloud(
+  familyCode: string,
+  entries: GrowthRecord[]
+): Promise<void> {
+  if (entries.length === 0) return;
+  const norm = normalizeFamilyCode(familyCode);
+  const path = `diaries/${norm}/records`;
+  try {
+    const batch = writeBatch(db);
+    entries.forEach((entry) => {
+      const recRef = doc(db, 'diaries', norm, 'records', entry.id);
+      batch.set(recRef, growthRecordToDoc(entry), { merge: true });
+    });
+    await batch.commit();
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+/**
+ * Deletes a single growth measurement document from the records subcollection
+ */
+export async function deleteGrowthRecordFromCloud(
+  familyCode: string,
+  growthId: string
+): Promise<void> {
+  const norm = normalizeFamilyCode(familyCode);
+  const path = `diaries/${norm}/records/${growthId}`;
+  try {
+    await deleteDoc(doc(db, 'diaries', norm, 'records', growthId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+/**
+ * Mirrors baby growth measurements (peso & altura) array on the root diary document
  */
 export async function updateGrowthRecordsInCloud(
   familyCode: string,
@@ -328,21 +434,20 @@ export async function updateGrowthRecordsInCloud(
 }
 
 /**
- * Subscribes to real-time updates for a shared diary and its records
+ * Subscribes to real-time updates for a shared diary, its routine records, and its growth measurements
  */
 export function subscribeToSharedDiary(
   familyCode: string,
   callbacks: {
     onDiaryData: (data: SharedDiaryData) => void;
     onRecords: (records: BabyRecord[]) => void;
+    onGrowthRecords?: (growthRecords: GrowthRecord[]) => void;
     onError?: (err: unknown) => void;
   }
 ): () => void {
   const norm = normalizeFamilyCode(familyCode);
-  const diaryPath = `diaries/${norm}`;
-  const recordsPath = `diaries/${norm}/records`;
 
-  // 1. Root diary listener (Profile + ActiveSleep)
+  // 1. Root diary listener (Profile + ActiveSleep + DayColors)
   const unsubDiary = onSnapshot(
     doc(db, 'diaries', norm),
     (snapshot) => {
@@ -356,15 +461,22 @@ export function subscribeToSharedDiary(
     }
   );
 
-  // 2. Records subcollection listener
+  // 2. Records subcollection listener (routine records + growth measurements)
   const unsubRecords = onSnapshot(
     collection(db, 'diaries', norm, 'records'),
     (snapshot) => {
       const recordsList: BabyRecord[] = [];
+      const growthList: GrowthRecord[] = [];
       snapshot.forEach((d) => {
-        recordsList.push(d.data() as BabyRecord);
+        const data = d.data();
+        if (isGrowthRecordDoc(data)) {
+          growthList.push(docToGrowthRecord(data));
+        } else {
+          recordsList.push(data as BabyRecord);
+        }
       });
       callbacks.onRecords(recordsList);
+      callbacks.onGrowthRecords?.(growthList);
     },
     (error) => {
       callbacks.onError?.(error);

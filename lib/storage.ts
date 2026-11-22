@@ -11,6 +11,8 @@ const STORAGE_KEYS = {
   DAY_COLORS: 'diario_do_bebe_day_colors_v1',
   GROWTH_RECORDS: 'diario_do_bebe_growth_records_v1',
   GROWTH_UPDATED_AT: 'diario_do_bebe_growth_updated_at_v1',
+  SYNCED_GROWTH_IDS: 'diario_do_bebe_synced_growth_ids_v1',
+  DELETED_GROWTH_IDS: 'diario_do_bebe_deleted_growth_ids_v1',
 };
 
 export const DEFAULT_PROFILE: BabyProfile = {
@@ -216,5 +218,59 @@ export function saveGrowthUpdatedAtToStorage(ts: number): void {
     }
   } catch (e) {
     console.error('Error saving growth updated timestamp to localStorage', e);
+  }
+}
+
+export function loadSyncedGrowthIdsFromStorage(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.SYNCED_GROWTH_IDS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.filter((id): id is string => typeof id === 'string');
+    }
+  } catch (e) {
+    console.error('Error reading synced growth ids from localStorage', e);
+  }
+  return [];
+}
+
+export function saveSyncedGrowthIdsToStorage(ids: string[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (ids.length > 0) {
+      localStorage.setItem(STORAGE_KEYS.SYNCED_GROWTH_IDS, JSON.stringify(Array.from(new Set(ids))));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.SYNCED_GROWTH_IDS);
+    }
+  } catch (e) {
+    console.error('Error saving synced growth ids to localStorage', e);
+  }
+}
+
+export function loadDeletedGrowthIdsFromStorage(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.DELETED_GROWTH_IDS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.filter((id): id is string => typeof id === 'string');
+    }
+  } catch (e) {
+    console.error('Error reading deleted growth ids from localStorage', e);
+  }
+  return [];
+}
+
+export function saveDeletedGrowthIdsToStorage(ids: string[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (ids.length > 0) {
+      localStorage.setItem(STORAGE_KEYS.DELETED_GROWTH_IDS, JSON.stringify(Array.from(new Set(ids))));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.DELETED_GROWTH_IDS);
+    }
+  } catch (e) {
+    console.error('Error saving deleted growth ids to localStorage', e);
   }
 }

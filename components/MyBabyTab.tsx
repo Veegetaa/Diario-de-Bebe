@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useBaby } from '@/context/BabyContext';
 import { GrowthRecord } from '@/lib/types';
 import { formatShortDate, getTodayDateString } from '@/lib/date-utils';
@@ -120,6 +120,15 @@ export function MyBabyTab() {
   );
   const [notes, setNotes] = useState<string>('');
   const [formError, setFormError] = useState<string | null>(null);
+
+  // If synced measurements arrive from another device while this tab opened empty, auto-close the blank form
+  const prevGrowthCountRef = useRef<number>(growthRecords.length);
+  useEffect(() => {
+    if (prevGrowthCountRef.current === 0 && growthRecords.length > 0 && !editingId) {
+      setShowForm(false);
+    }
+    prevGrowthCountRef.current = growthRecords.length;
+  }, [growthRecords.length, editingId]);
 
   // Compare mode state
   const [isComparing, setIsComparing] = useState<boolean>(false);

@@ -103,6 +103,12 @@
         "isFavorite": {
           "type": "boolean"
         },
+        "weightKg": {
+          "type": "number"
+        },
+        "heightCm": {
+          "type": "number"
+        },
         "updatedAt": {
           "type": "number"
         }

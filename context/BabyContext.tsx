@@ -36,8 +36,11 @@ import {
   saveDayColorsToStorage,
   loadGrowthRecordsFromStorage,
   saveGrowthRecordsToStorage,
-  loadGrowthUpdatedAtFromStorage,
   saveGrowthUpdatedAtToStorage,
+  loadSyncedGrowthIdsFromStorage,
+  saveSyncedGrowthIdsToStorage,
+  loadDeletedGrowthIdsFromStorage,
+  saveDeletedGrowthIdsToStorage,
 } from '@/lib/storage';
 import {
   getTodayDateString,
@@ -57,6 +60,9 @@ import {
   updateActiveSleepInCloud,
   updateDayColorInCloud,
   updateGrowthRecordsInCloud,
+  saveGrowthRecordToCloud,
+  syncLocalGrowthRecordsToCloud,
+  deleteGrowthRecordFromCloud,
   subscribeToSharedDiary,
   normalizeFamilyCode,
   syncLocalRecordsToCloud,
@@ -194,7 +200,9 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const recordsRef = useRef<BabyRecord[]>(records);
   const growthRecordsRef = useRef<GrowthRecord[]>(growthRecords);
-  const lastPushedGrowthRef = useRef<{ ts: number; at: number }>({ ts: 0, at: 0 });
+  const recentLocalGrowthEditsRef = useRef<Map<string, { item: GrowthRecord; at: number }>>(
+    new Map()
+  );
 
   useEffect(() => {
     recordsRef.current = records;
@@ -209,99 +217,117 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     testConnection();
   }, []);
 
-  // Reconcile cloud vs local growth measurements safely:
-  // - Rescues any pre-existing unsynced local measurements (localTs === 0) by merging and uploading them.
-  // - Uses growthUpdatedAt timestamps once synced so edits and deletions propagate cleanly across devices.
-  const reconcileGrowthRecords = useCallback(
-    (diaryData: SharedDiaryData | null, syncId: string) => {
+  // Reconcile growth measurements from the proven Firestore /records subcollection (type: 'crescimento')
+  // and any legacy diaryData.growthRecords array, automatically rescuing unsynced local measurements
+  // without ever resurrecting measurements deleted on another device.
+  const reconcileGrowthFromSubcollection = useCallback(
+    (
+      cloudSubGrowth: GrowthRecord[],
+      syncId: string,
+      legacyDiaryGrowth?: GrowthRecord[] | null
+    ) => {
       const localGrowth = sortGrowthRecordsAsc(loadGrowthRecordsFromStorage());
-      const localTs = loadGrowthUpdatedAtFromStorage();
-      const hasCloudArray =
-        diaryData?.growthRecords !== undefined && Array.isArray(diaryData.growthRecords);
-      const cloudGrowth = hasCloudArray ? sortGrowthRecordsAsc(diaryData!.growthRecords!) : [];
-      const cloudTs =
-        typeof diaryData?.growthUpdatedAt === 'number' ? diaryData.growthUpdatedAt : 0;
+      const syncedIds = new Set(loadSyncedGrowthIdsFromStorage());
+      const deletedIds = new Set(loadDeletedGrowthIdsFromStorage());
+      const now = Date.now();
 
-      // Case 1: Legacy local measurements created before growthUpdatedAt existed (never synced to cloud)
-      if (localGrowth.length > 0 && localTs === 0) {
-        const mergedMap = new Map<string, GrowthRecord>();
-        localGrowth.forEach((item) => mergedMap.set(item.id, item));
-        cloudGrowth.forEach((item) => mergedMap.set(item.id, item));
-        const merged = sortGrowthRecordsAsc(Array.from(mergedMap.values()));
-
-        const now = Math.max(Date.now(), cloudTs + 1);
-        growthRecordsRef.current = merged;
-        setGrowthRecords(merged);
-        saveGrowthRecordsToStorage(merged);
-        saveGrowthUpdatedAtToStorage(now);
-
-        if (syncId) {
-          lastPushedGrowthRef.current = { ts: now, at: Date.now() };
-          updateGrowthRecordsInCloud(syncId, merged, now).catch((e) =>
-            console.error('Error syncing rescued local growth records to cloud:', e)
-          );
+      // Prune expired recent local edit guards (10s window)
+      recentLocalGrowthEditsRef.current.forEach((val, key) => {
+        if (now - val.at > 10000) {
+          recentLocalGrowthEditsRef.current.delete(key);
         }
-        return;
+      });
+
+      const cloudSubMap = new Map<string, GrowthRecord>();
+      cloudSubGrowth.forEach((item) => {
+        if (!deletedIds.has(item.id)) {
+          const recentLocal = recentLocalGrowthEditsRef.current.get(item.id);
+          cloudSubMap.set(item.id, recentLocal ? recentLocal.item : item);
+          syncedIds.add(item.id);
+        }
+      });
+
+      // Complete any pending deletes (e.g., deleted while offline)
+      const pendingDeletes = cloudSubGrowth.filter((item) => deletedIds.has(item.id));
+      if (pendingDeletes.length > 0 && syncId) {
+        pendingDeletes.forEach((item) => {
+          deleteGrowthRecordFromCloud(syncId, item.id).catch((e) =>
+            console.warn('Error completing pending growth delete:', e)
+          );
+        });
       }
 
-      // Case 2: Cloud has no growthUpdatedAt yet
-      if (cloudTs === 0) {
-        if (localGrowth.length === 0 && cloudGrowth.length === 0) {
-          return;
-        }
-        const mergedMap = new Map<string, GrowthRecord>();
-        cloudGrowth.forEach((item) => mergedMap.set(item.id, item));
-        localGrowth.forEach((item) => mergedMap.set(item.id, item));
-        const merged = sortGrowthRecordsAsc(Array.from(mergedMap.values()));
-
-        growthRecordsRef.current = merged;
-        setGrowthRecords(merged);
-        saveGrowthRecordsToStorage(merged);
-
-        if (merged.length > 0 && syncId) {
-          const ts = localTs > 0 ? localTs : Date.now();
-          saveGrowthUpdatedAtToStorage(ts);
+      // Migrate any legacy root-doc diaryData.growthRecords items into the subcollection
+      const toUploadMap = new Map<string, GrowthRecord>();
+      if (Array.isArray(legacyDiaryGrowth)) {
+        legacyDiaryGrowth.forEach((item) => {
           if (
-            lastPushedGrowthRef.current.ts !== ts ||
-            Date.now() - lastPushedGrowthRef.current.at > 5000
+            item &&
+            typeof item.id === 'string' &&
+            !cloudSubMap.has(item.id) &&
+            !deletedIds.has(item.id) &&
+            !syncedIds.has(item.id)
           ) {
-            lastPushedGrowthRef.current = { ts, at: Date.now() };
-            updateGrowthRecordsInCloud(syncId, merged, ts).catch((e) =>
-              console.error('Error uploading merged growth records to cloud:', e)
-            );
+            cloudSubMap.set(item.id, item);
+            toUploadMap.set(item.id, item);
+          }
+        });
+      }
+
+      // Rescue any local growth measurements that have NEVER been confirmed in cloud /records yet
+      // (or were added locally within the last 10s before snapshot echo)
+      localGrowth.forEach((item) => {
+        if (deletedIds.has(item.id)) return;
+        const isRecentAdd = recentLocalGrowthEditsRef.current.has(item.id);
+        if (!cloudSubMap.has(item.id) && (!syncedIds.has(item.id) || isRecentAdd)) {
+          cloudSubMap.set(item.id, item);
+          if (!isRecentAdd) {
+            toUploadMap.set(item.id, item);
           }
         }
-        return;
-      }
+      });
 
-      // Case 3: Modern synced cloud (cloudTs > 0)
-      if (localTs > cloudTs) {
-        // Local device has newer changes (e.g. offline edit or write still in flight)
-        if (
-          syncId &&
-          (lastPushedGrowthRef.current.ts !== localTs ||
-            Date.now() - lastPushedGrowthRef.current.at > 5000)
-        ) {
-          lastPushedGrowthRef.current = { ts: localTs, at: Date.now() };
-          updateGrowthRecordsInCloud(syncId, localGrowth, localTs).catch((e) =>
-            console.error('Error pushing newer local growth records to cloud:', e)
-          );
-        }
-        return;
-      }
+      // Keep deletedIds clean once removed from cloud
+      const activeCloudSubIds = new Set(cloudSubGrowth.map((item) => item.id));
+      const remainingDeletedIds = Array.from(deletedIds).filter((id) =>
+        activeCloudSubIds.has(id)
+      );
+      saveDeletedGrowthIdsToStorage(remainingDeletedIds);
+      saveSyncedGrowthIdsToStorage(Array.from(syncedIds));
 
-      // Cloud is equal or newer: accept cloud state as authoritative (propagates edits and deletions cleanly)
-      growthRecordsRef.current = cloudGrowth;
-      setGrowthRecords(cloudGrowth);
-      saveGrowthRecordsToStorage(cloudGrowth);
-      saveGrowthUpdatedAtToStorage(cloudTs);
+      const merged = sortGrowthRecordsAsc(Array.from(cloudSubMap.values()));
+      growthRecordsRef.current = merged;
+      setGrowthRecords(merged);
+      saveGrowthRecordsToStorage(merged);
+
+      // Upload unsynced local / legacy growth items directly into the /records subcollection
+      const toUpload = Array.from(toUploadMap.values());
+      if (toUpload.length > 0 && syncId) {
+        syncLocalGrowthRecordsToCloud(syncId, toUpload)
+          .then(() => {
+            const updatedSynced = new Set(loadSyncedGrowthIdsFromStorage());
+            toUpload.forEach((item) => updatedSynced.add(item.id));
+            saveSyncedGrowthIdsToStorage(Array.from(updatedSynced));
+          })
+          .catch((e) => console.error('Error uploading unsynced growth records to cloud:', e));
+
+        // Best-effort secondary mirror to root diary document
+        updateGrowthRecordsInCloud(syncId, merged, Date.now()).catch((e) =>
+          console.warn('Secondary mirror growthRecords warning:', e)
+        );
+      }
     },
     []
   );
 
   // Shared resilient method to merge cloud data with local records without ever wiping local state
   const applyCloudData = useCallback(
-    (diaryData: SharedDiaryData | null, cloudRecords: BabyRecord[], syncId: string) => {
+    (
+      diaryData: SharedDiaryData | null,
+      cloudRecords: BabyRecord[],
+      syncId: string,
+      cloudGrowthRecords: GrowthRecord[] = []
+    ) => {
       if (diaryData?.babyProfile) {
         setProfile(diaryData.babyProfile);
         saveProfileToStorage(diaryData.babyProfile);
@@ -314,7 +340,11 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         setDayColors(diaryData.dayColors || {});
         saveDayColorsToStorage(diaryData.dayColors || {});
       }
-      reconcileGrowthRecords(diaryData, syncId);
+      reconcileGrowthFromSubcollection(
+        cloudGrowthRecords,
+        syncId,
+        diaryData?.growthRecords ?? null
+      );
 
       // Merge cloud records with any local records that might still be unsynced
       const localRecs = loadRecordsFromStorage();
@@ -329,7 +359,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       setRecords(merged);
       saveRecordsToStorage(merged);
     },
-    [reconcileGrowthRecords]
+    [reconcileGrowthFromSubcollection]
   );
 
   // Listen to Firebase Auth state changes
@@ -343,7 +373,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         fetchFullDiaryData(user.uid)
           .then((res) => {
             if (res.success) {
-              applyCloudData(res.diaryData, res.records, user.uid);
+              applyCloudData(res.diaryData, res.records, user.uid, res.growthRecords);
             } else {
               console.warn('Auto fetch on auth was not successful, preserving local records');
             }
@@ -376,7 +406,6 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
           setDayColors(diaryData.dayColors || {});
           saveDayColorsToStorage(diaryData.dayColors || {});
         }
-        reconcileGrowthRecords(diaryData, effectiveSyncId);
       },
       onRecords: (cloudRecords) => {
         setIsCloudConnected(true);
@@ -396,6 +425,11 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         setRecords(finalRecords);
         saveRecordsToStorage(finalRecords);
       },
+      onGrowthRecords: (cloudGrowth) => {
+        setIsCloudConnected(true);
+        setIsSyncing(false);
+        reconcileGrowthFromSubcollection(cloudGrowth, effectiveSyncId);
+      },
       onError: (err) => {
         setIsSyncing(false);
         setSyncError('Falha temporária ao sincronizar com a nuvem');
@@ -406,7 +440,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     return () => {
       unsubscribe();
     };
-  }, [effectiveSyncId, reconcileGrowthRecords]);
+  }, [effectiveSyncId, reconcileGrowthFromSubcollection]);
 
   // Re-sync on iOS Safari wakeup (unlock phone, switch tabs, reconnect internet)
   useEffect(() => {
@@ -419,7 +453,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       try {
         const res = await fetchFullDiaryData(effectiveSyncId);
         if (res.success) {
-          applyCloudData(res.diaryData, res.records, effectiveSyncId);
+          applyCloudData(res.diaryData, res.records, effectiveSyncId, res.growthRecords);
           setIsCloudConnected(true);
         }
       } catch (err) {
@@ -799,7 +833,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         // Instantly hydrate full cloud data to state and storage safely
         const res = await fetchFullDiaryData(user.uid);
         if (res.success) {
-          applyCloudData(res.diaryData, res.records, user.uid);
+          applyCloudData(res.diaryData, res.records, user.uid, res.growthRecords);
         }
 
         return { success: true };
@@ -832,9 +866,8 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
           dayColors
         );
         if (growthRecords.length > 0) {
-          const now = Date.now();
-          saveGrowthUpdatedAtToStorage(now);
-          lastPushedGrowthRef.current = { ts: now, at: now };
+          saveSyncedGrowthIdsToStorage(growthRecords.map((g) => g.id));
+          saveGrowthUpdatedAtToStorage(Date.now());
         }
         return { success: true };
       } catch (err: unknown) {
@@ -859,7 +892,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
 
       const res = await fetchFullDiaryData(user.uid);
       if (res.success) {
-        applyCloudData(res.diaryData, res.records, user.uid);
+        applyCloudData(res.diaryData, res.records, user.uid, res.growthRecords);
       }
 
       return { success: true };
@@ -882,7 +915,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       if (effectiveSyncId) {
         const res = await fetchFullDiaryData(effectiveSyncId);
         if (res.success) {
-          applyCloudData(res.diaryData, res.records, effectiveSyncId);
+          applyCloudData(res.diaryData, res.records, effectiveSyncId, res.growthRecords);
         }
       }
       setIsCloudConnected(true);
@@ -925,19 +958,63 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
     [effectiveSyncId]
   );
 
-  // Baby Growth Measurements CRUD (Peso e Altura)
-  const commitGrowthRecords = useCallback(
-    (next: GrowthRecord[]) => {
-      const sorted = sortGrowthRecordsAsc(next);
+  // Baby Growth Measurements CRUD (Peso e Altura) — synced directly via /records subcollection + root mirror
+  const upsertGrowthEntry = useCallback(
+    (entry: GrowthRecord, nextList: GrowthRecord[]) => {
+      const sorted = sortGrowthRecordsAsc(nextList);
       const ts = Date.now();
+      recentLocalGrowthEditsRef.current.set(entry.id, { item: entry, at: ts });
+
+      // Ensure it is not marked as deleted
+      const currentDeleted = loadDeletedGrowthIdsFromStorage().filter((id) => id !== entry.id);
+      saveDeletedGrowthIdsToStorage(currentDeleted);
+
       growthRecordsRef.current = sorted;
       setGrowthRecords(sorted);
       saveGrowthRecordsToStorage(sorted);
       saveGrowthUpdatedAtToStorage(ts);
+
       if (effectiveSyncId) {
-        lastPushedGrowthRef.current = { ts, at: Date.now() };
+        saveGrowthRecordToCloud(effectiveSyncId, entry)
+          .then(() => {
+            const updatedSynced = new Set(loadSyncedGrowthIdsFromStorage());
+            updatedSynced.add(entry.id);
+            saveSyncedGrowthIdsToStorage(Array.from(updatedSynced));
+          })
+          .catch((e) => console.error('Error saving growth record to cloud:', e));
+
+        // Secondary mirror to root diary doc
         updateGrowthRecordsInCloud(effectiveSyncId, sorted, ts).catch((e) =>
-          console.error('Error syncing growth records to cloud:', e)
+          console.warn('Secondary mirror growthRecords warning:', e)
+        );
+      }
+    },
+    [effectiveSyncId]
+  );
+
+  const removeGrowthEntry = useCallback(
+    (id: string, nextList: GrowthRecord[]) => {
+      const sorted = sortGrowthRecordsAsc(nextList);
+      const ts = Date.now();
+      recentLocalGrowthEditsRef.current.delete(id);
+
+      const currentDeleted = new Set(loadDeletedGrowthIdsFromStorage());
+      currentDeleted.add(id);
+      saveDeletedGrowthIdsToStorage(Array.from(currentDeleted));
+
+      growthRecordsRef.current = sorted;
+      setGrowthRecords(sorted);
+      saveGrowthRecordsToStorage(sorted);
+      saveGrowthUpdatedAtToStorage(ts);
+
+      if (effectiveSyncId) {
+        deleteGrowthRecordFromCloud(effectiveSyncId, id).catch((e) =>
+          console.error('Error deleting growth record from cloud:', e)
+        );
+
+        // Secondary mirror to root diary doc
+        updateGrowthRecordsInCloud(effectiveSyncId, sorted, ts).catch((e) =>
+          console.warn('Secondary mirror growthRecords warning:', e)
         );
       }
     },
@@ -947,14 +1024,14 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
   const addGrowthRecord = useCallback(
     (entry: GrowthRecord) => {
       const next = [...growthRecordsRef.current, entry];
-      commitGrowthRecords(next);
+      upsertGrowthEntry(entry, next);
 
       showUndo('Medição de peso e altura salva', () => {
         const reverted = growthRecordsRef.current.filter((item) => item.id !== entry.id);
-        commitGrowthRecords(reverted);
+        removeGrowthEntry(entry.id, reverted);
       });
     },
-    [commitGrowthRecords, showUndo]
+    [upsertGrowthEntry, removeGrowthEntry, showUndo]
   );
 
   const updateGrowthRecord = useCallback(
@@ -963,7 +1040,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       const next = growthRecordsRef.current.map((item) =>
         item.id === updated.id ? updated : item
       );
-      commitGrowthRecords(next);
+      upsertGrowthEntry(updated, next);
 
       if (previous) {
         const snapshot = previous;
@@ -971,28 +1048,28 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
           const reverted = growthRecordsRef.current.map((item) =>
             item.id === snapshot.id ? snapshot : item
           );
-          commitGrowthRecords(reverted);
+          upsertGrowthEntry(snapshot, reverted);
         });
       }
     },
-    [commitGrowthRecords, showUndo]
+    [upsertGrowthEntry, showUndo]
   );
 
   const deleteGrowthRecord = useCallback(
     (id: string) => {
       const removed = growthRecordsRef.current.find((item) => item.id === id);
       const next = growthRecordsRef.current.filter((item) => item.id !== id);
-      commitGrowthRecords(next);
+      removeGrowthEntry(id, next);
 
       if (removed) {
         const restored = removed;
         showUndo('Medição removida', () => {
           const reverted = [...growthRecordsRef.current, restored];
-          commitGrowthRecords(reverted);
+          upsertGrowthEntry(restored, reverted);
         });
       }
     },
-    [commitGrowthRecords, showUndo]
+    [removeGrowthEntry, upsertGrowthEntry, showUndo]
   );
 
   const logout = useCallback(async (): Promise<void> => {
@@ -1003,9 +1080,12 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
       setRecords([]);
       saveRecordsToStorage([]);
       growthRecordsRef.current = [];
+      recentLocalGrowthEditsRef.current.clear();
       setGrowthRecords([]);
       saveGrowthRecordsToStorage([]);
       saveGrowthUpdatedAtToStorage(0);
+      saveSyncedGrowthIdsToStorage([]);
+      saveDeletedGrowthIdsToStorage([]);
       setDayColors({});
       saveDayColorsToStorage({});
     } catch (err) {
@@ -1042,9 +1122,8 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         dayColors
       );
       if (growthRecords.length > 0) {
-        const now = Date.now();
-        saveGrowthUpdatedAtToStorage(now);
-        lastPushedGrowthRef.current = { ts: now, at: now };
+        saveSyncedGrowthIdsToStorage(growthRecords.map((g) => g.id));
+        saveGrowthUpdatedAtToStorage(Date.now());
       }
       setFamilyCode(code);
       saveFamilyCodeToStorage(code);
@@ -1079,19 +1158,24 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         }
         setFamilyCode(norm);
         saveFamilyCodeToStorage(norm);
-        if (diary.babyProfile) {
-          setProfile(diary.babyProfile);
-          saveProfileToStorage(diary.babyProfile);
+        const full = await fetchFullDiaryData(norm);
+        if (full.success) {
+          applyCloudData(full.diaryData || diary, full.records, norm, full.growthRecords);
+        } else {
+          if (diary.babyProfile) {
+            setProfile(diary.babyProfile);
+            saveProfileToStorage(diary.babyProfile);
+          }
+          if (diary.activeSleep !== undefined) {
+            setActiveSleep(diary.activeSleep);
+            saveActiveSleepToStorage(diary.activeSleep);
+          }
+          if (diary.dayColors !== undefined) {
+            setDayColors(diary.dayColors || {});
+            saveDayColorsToStorage(diary.dayColors || {});
+          }
+          reconcileGrowthFromSubcollection([], norm, diary.growthRecords ?? null);
         }
-        if (diary.activeSleep !== undefined) {
-          setActiveSleep(diary.activeSleep);
-          saveActiveSleepToStorage(diary.activeSleep);
-        }
-        if (diary.dayColors !== undefined) {
-          setDayColors(diary.dayColors || {});
-          saveDayColorsToStorage(diary.dayColors || {});
-        }
-        reconcileGrowthRecords(diary, norm);
         setIsCloudConnected(true);
         return { success: true };
       } catch (e) {
@@ -1104,7 +1188,7 @@ export function BabyProvider({ children }: { children: React.ReactNode }) {
         setIsSyncing(false);
       }
     },
-    [reconcileGrowthRecords]
+    [applyCloudData, reconcileGrowthFromSubcollection]
   );
 
   const disconnectFamilyCode = useCallback(() => {
